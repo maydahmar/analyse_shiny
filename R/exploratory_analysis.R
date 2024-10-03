@@ -1,61 +1,57 @@
-library(ggplot2)
-library(dplyr)
-library(ggcorrplot)
+# R/exploratory_analysis.R
 
-# Charger et préparer les données en fonction de la sélection
-load_dataset <- function(dataset_name) {
-  if (dataset_name == "Credit fraud") {
-    return(read.csv("data/credit_fraud.csv"))
-  } else if (dataset_name == "Bank marketing") {
-    return(read.csv("data/bank_marketing.csv"))
-  } else if (dataset_name == "Employee attrition") {
-    return(read.csv("data/employee_attrition.csv"))
-  } else if (dataset_name == "Bank marketing full") {
-    return(read.csv("/mnt/data/bank-additional-full.csv")) # Fichier chargé
-  }
-}
-
-# Fonction pour créer un résumé du dataset
-summarize_data <- function(data) {
-  summary(data)
-}
-
-# Fonction pour créer un graphique de churn
-plot_churn <- function(data, variable) {
-  ggplot(data, aes_string(x = variable, fill = "Churn")) +
-    geom_bar(position = "fill") +
-    labs(title = paste("Distribution de", variable, "par churn"), y = "Proportion")
-}
-
-# Fonction pour créer une matrice de corrélation
-plot_correlation <- function(data) {
-  correlation_matrix <- cor(select_if(data, is.numeric))
-  ggcorrplot(correlation_matrix, method = "circle")
-}
-
-# Module serveur pour l'analyse exploratoire
-exploratory_server <- function(input, output, session) {
-  
-  # Réagir au chargement des données
-  dataset <- eventReactive(input$load_data, {
-    data <- load_dataset(input$dataset)
-    updateSelectInput(session, "variable", choices = names(data))
-    return(data)
+# R/exploratory_analysis.R
+exploratory_analysis <- function(input, output, session, selected_dataset) {
+  output$exploratory_test <- renderText({
+    "Exploratory UI Loaded!" # Message de test
   })
   
-  # Résumé des données
-  output$data_summary <- renderTable({
-    summarize_data(dataset())
+  # Résumé des dimensions et valeurs manquantes
+  output$dataset_summary <- renderTable({
+    dataset <- selected_dataset()
+    summary <- data.frame(
+      "Dimension" = c("Rows", "Columns"),
+      "Count" = c(nrow(dataset), ncol(dataset))
+    )
+    summary$`Missing Values` <- c(sum(is.na(dataset)), NA)
+    return(summary)
   })
   
-  # Graphique de churn
+  # Proportion de churn
   output$churn_plot <- renderPlot({
-    req(input$variable)
-    plot_churn(dataset(), input$variable)
+    dataset <- selected_dataset()
+    prop_table <- prop.table(table(dataset$churn)) # Remplace "churn" par le nom de la colonne cible
+    barplot(prop_table, main = "Proportion de Churn", col = c("blue", "red"))
+  })
+  
+  # Variables catégorielles vs. Churn
+  output$cat_var_plot <- renderPlot({
+    dataset <- selected_dataset()
+    cat_vars <- sapply(dataset, is.factor) # Identifier les variables catégorielles
+    for (var in names(cat_vars[cat_vars])) {
+      table_data <- table(dataset[[var]], dataset$churn) # Remplace "churn" par le nom de la colonne cible
+      barplot(prop.table(table_data, margin = 2), main = paste("Proportion de", var, "vs. Churn"),
+              col = c("blue", "red"), legend = TRUE)
+    }
+  })
+  
+  # Variables numériques - Churn vs. Non-Churn
+  output$num_var_plot <- renderPlot({
+    dataset <- selected_dataset()
+    num_vars <- sapply(dataset, is.numeric) # Identifier les variables numériques
+    for (var in names(num_vars[num_vars])) {
+      hist(dataset[dataset$churn == 1, var], main = paste(var, "- Churn"),
+           xlab = var, col = "red", breaks = 10, freq = FALSE)
+      hist(dataset[dataset$churn == 0, var], main = paste(var, "- Non-Churn"),
+           xlab = var, col = "blue", breaks = 10, freq = FALSE, add = TRUE)
+    }
   })
   
   # Matrice de corrélation
-  output$correlation_plot <- renderPlot({
-    plot_correlation(dataset())
+  output$corr_matrix <- renderPlot({
+    dataset <- selected_dataset()
+    num_vars <- sapply(dataset, is.numeric)
+    corr <- cor(dataset[, num_vars], use = "complete.obs")
+    corrplot::corrplot(corr, method = "circle")
   })
 }

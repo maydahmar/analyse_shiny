@@ -1,33 +1,115 @@
-/* Styles pour la barre de navigation */
-.navbar-default {
-  background-color: #3F3685;
-  border: none;
+/* Styles pour la bannière */
+.hero {
+  background-color: #f4f4f4;
+  padding: 20px;
+  text-align: center;
 }
 
-.navbar-brand {
-  background-color: #ffffff;
-  padding: 10px;
-}
-
-/* Styles pour les boutons */
-.button {
-  background-color: #0078d4;
+/* Boutons */
+.hero-button {
+  background-color: #007bff;
   color: #fff;
-  border: 1px solid #0078d4;
+  border: none;
+  padding: 10px 20px;
+  margin: 5px;
+  cursor: pointer;
+}
+
+/* Container principal */
+.grey-container {
+  background-color: #f0f0f0;
+  padding: 20px;
+  margin-top: 20px;
+}
+
+/* Conteneur pour les boutons horizontaux */
+.horizontal-buttons {
+  display: flex;
+  justify-content: space-around; /* Ajoute de l'espace égal entre les éléments */
+  align-items: center;
+}
+
+/* Liens de sections */
+.featured-item {
+  display: block;
+  background-color: #fff;
+  padding: 20px;
+  margin: 10px;
+  border: 1px solid #ccc;
+  text-decoration: none;
+  color: #000;
+  cursor: pointer;
+  width: 20%;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.featured-item:hover {
+  background-color: #e0e0e0;
+}
+
+/* Icônes */
+.icon-box {
+  display: inline-block;
+  margin-right: 10px;
+}
+
+/* Styles pour la bannière */
+.hero {
+  background-image: url('jjl.JPG'); /* Chemin vers l'image */
+  background-size: cover; /* Couvrir tout l'espace disponible */
+  background-position: center; /* Centrer l'image */
+  color: #fff; /* Couleur du texte en blanc pour contraste */
+  padding: 60px; /* Ajouter du padding pour le contenu */
+  text-align: center;
+  background-repeat: no-repeat; /* Éviter de répéter l'image */
+}
+
+/* Styles pour la bannière de bienvenue */
+.desc {
+  background-color: transparent; /* Arrière-plan transparent */
+  color: #000; /* Texte en noir */
+  padding: 10px; /* Réduire la taille de la section */
+  text-align: center;
+  font-size: 1.2em; /* Ajuster la taille du texte si nécessaire */
+}
+
+.news-section h3 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.news-list {
+  list-style-type: none; /* Enlever les puces de la liste */
+  padding: 0;
+}
+
+.news-list li {
   padding: 10px;
+  border-bottom: 1px solid #ccc;
 }
 
-.button:hover {
-  background-color: #005ba1;
-  border-color: #005597;
+/* Section pour les images des datasets */
+.datasets-images {
+  display: flex;
+  justify-content: space-around; /* Espacer les images */
+  margin-top: 20px;
 }
 
-/* Titres et paragraphes */
-h1, h2, h3, h4 {
+.dataset-image {
+  text-align: center;
+  max-width: 30%;
+}
+
+.dataset-image img {
+  max-width: 100%; /* Ajuster l'image à la taille de son conteneur */
+  height: auto;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  margin-bottom: 10px;
+}
+
+.dataset-image p {
   font-weight: bold;
-  color: #3F3685;
-}
-
-p {
-  font-size: 16px;
+  margin-top: 5px;
 }

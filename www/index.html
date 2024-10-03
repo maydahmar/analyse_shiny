@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Profil de données</title>
+  <!-- Inclure FontAwesome pour les icônes -->
+  <link rel="stylesheet" href="//use.fontawesome.com/releases/v6.0.0/css/all.css">
+  <!-- Inclure le fichier CSS -->
+  <link rel="stylesheet" type="text/css" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/shiny@1.7.0/shiny.min.js"></script>
+
+</head>
+<body>
+  
+  <!-- Section de bienvenue -->
+  <div class="desc">
+    <div class="desc">
+      <h1>Welcome to the Data Profile</h1>
+    </div>
+  </div>
+  
+  <!-- TOP OF HOMEPAGE - BANNER -->
+  <div class="hero">
+    <div class="hero-inner">
+      <h2>Explore datasets related to Credit Fraud, Bank Marketing, and Employee Attrition.</h2>
+    </div>
+  </div>
+  
+  <!-- MAIN FEATURES -->
+  <div class="grey-container">
+    <div class="container-inner-contents" id="tab-buttons">
+      <!-- Afficher les liens horizontalement -->
+      <div class="horizontal-buttons">
+        <a class="featured-item" id="link-exploratory">
+          <div class="features-text-section">
+            <div class="icon-box">
+              <i class="fa fa-list-ul fa-3x"></i>
+            </div>
+            <h3>Exploratory Analysis</h3>
+            <p>Explore your datasets in depth.</p>
+          </div>
+        </a>
+
+        <a class="featured-item" id="link-modeling">
+          <div class="features-text-section">
+            <div class="icon-box">
+              <i class="fa fa-cogs fa-3x"></i>
+            </div>
+            <h3>Modeling</h3>
+            <p>Build predictive models and analyze their performance.</p>
+          </div>
+        </a>
+
+        <a class="featured-item" id="link-resampling">
+          <div class="features-text-section">
+            <div class="icon-box">
+              <i class="fa fa-sync fa-3x"></i>
+            </div>
+            <h3>Resampling</h3>
+            <p>Validate your models with cross-validation techniques.</p>
+          </div>
+        </a>
+
+        <a class="featured-item" id="link-conclusions">
+          <div class="features-text-section">
+            <div class="icon-box">
+              <i class="fa fa-check-circle fa-3x"></i>
+            </div>
+            <h3>Conclusions</h3>
+            <p>Summarize your findings and results.</p>
+          </div>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section pour le journal d'actualités -->
+  <div class="news-section">
+    <h3>Dernières actualités</h3>
+    <ul class="news-list">
+      <li>
+        <p><strong>01/10/2024:</strong> Mise à jour des indicateurs pour le dataset "Credit Fraud".</p>
+      </li>
+      <li>
+        <p><strong>25/09/2024:</strong> Nouvelles méthodes de modélisation ajoutées pour "Bank Marketing".</p>
+      </li>
+      <li>
+        <p><strong>15/09/2024:</strong> Étude de cas sur l'attrition des employés publiée.</p>
+      </li>
+    </ul>
+  </div>
+  
+    <!-- Section pour les images des datasets -->
+  <div class="datasets-images">
+    <div class="dataset-image">
+      <img src="credit_fraud.JPG" alt="Credit Fraud Dataset">
+      <p>Credit Fraud </p>
+    </div>
+    <div class="dataset-image">
+      <img src="customer_churn.JPG" alt="Bank Marketing Dataset">
+      <p>Bank Marketing </p>
+    </div>
+    <div class="dataset-image">
+      <img src="employee-churn.JPG" alt="Employee Attrition Dataset">
+      <p>Employee Attrition </p>
+    </div>
+  </div>
+  
+  <script type="text/javascript">
+  document.getElementById('link-exploratory').onclick = function() {
+    console.log("Exploratory Analysis link clicked");
+    Shiny.setInputValue('navigate_to', 'exploratory');
+  };
+</script>
+
+  <a href="#" id="link-home">Retour à l'accueil</a>
+  
+  <script type="text/javascript">
+  document.getElementById('link-home').onclick = function() {
+    Shiny.setInputValue('navigate_to', 'home');
+  };
+</script>
+
+
+
+
+
+</body>
+</html>

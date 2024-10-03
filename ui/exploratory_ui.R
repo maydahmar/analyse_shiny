@@ -1,27 +1,25 @@
 exploratory_ui <- function() {
-  tabItem(
-    tabName = "exploratory",
-    fluidPage(
-      h2("Exploratory Analysis"),
-      sidebarLayout(
-        sidebarPanel(
-          selectInput("dataset", "Choisir un dataset:",
-                      choices = c("Credit fraud", "Bank marketing", "Employee attrition", "Bank marketing full")),
-          actionButton("load_data", "Charger les données"),
-          hr(),
-          selectInput("variable", "Choisir une variable:", choices = NULL),
-          selectInput("plot_type", "Type de graphique:", 
-                      choices = c("Histogramme", "Barplot", "Boxplot")),
-          hr()
-        ),
-        mainPanel(
-          tabsetPanel(
-            tabPanel("Résumé des données", tableOutput("data_summary")),
-            tabPanel("Graphique de churn", plotOutput("churn_plot")),
-            tabPanel("Corrélations", plotOutput("correlation_plot"))
-          )
-        )
-      )
+  fluidPage(
+    useShinyjs(),  # Charger shinyjs pour pouvoir utiliser les fonctions de navigation
+    actionButton("go_back", "go back home"),  # Bouton pour revenir à la page d'accueil
+    titlePanel("Exploratory Data Analysis"),
+    fluidRow(
+      box(title = "Dimensions et valeurs manquantes", width = 6, status = "primary", solidHeader = TRUE,
+          tableOutput("dataset_summary")),
+      box(title = "Proportion de churn", width = 6, status = "primary", solidHeader = TRUE,
+          plotOutput("churn_plot"))
+    ),
+    fluidRow(
+      box(title = "Variables catégorielles", width = 12, status = "info", solidHeader = TRUE,
+          plotOutput("cat_var_plot"))
+    ),
+    fluidRow(
+      box(title = "Variables numériques - Churn vs. Non-Churn", width = 12, status = "info", solidHeader = TRUE,
+          plotOutput("num_var_plot"))
+    ),
+    fluidRow(
+      box(title = "Matrice de corrélation", width = 12, status = "danger", solidHeader = TRUE,
+          plotOutput("corr_matrix"))
     )
   )
 }
