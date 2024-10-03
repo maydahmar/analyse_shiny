@@ -1,12 +1,27 @@
-# ui/exploratory_ui.R
-
-# UI pour l'analyse exploratoire
 exploratory_ui <- function() {
-  tagList(
-    plotOutput("missing_values_plot"),
-    plotOutput("churn_distribution_plot"),
-    plotOutput("categorical_churn_plot"),
-    plotOutput("numerical_churn_plot"),
-    plotOutput("correlation_matrix_plot")
+  tabItem(
+    tabName = "exploratory",
+    fluidPage(
+      h2("Exploratory Analysis"),
+      sidebarLayout(
+        sidebarPanel(
+          selectInput("dataset", "Choisir un dataset:",
+                      choices = c("Credit fraud", "Bank marketing", "Employee attrition", "Bank marketing full")),
+          actionButton("load_data", "Charger les données"),
+          hr(),
+          selectInput("variable", "Choisir une variable:", choices = NULL),
+          selectInput("plot_type", "Type de graphique:", 
+                      choices = c("Histogramme", "Barplot", "Boxplot")),
+          hr()
+        ),
+        mainPanel(
+          tabsetPanel(
+            tabPanel("Résumé des données", tableOutput("data_summary")),
+            tabPanel("Graphique de churn", plotOutput("churn_plot")),
+            tabPanel("Corrélations", plotOutput("correlation_plot"))
+          )
+        )
+      )
+    )
   )
 }

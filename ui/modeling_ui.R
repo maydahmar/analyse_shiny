@@ -1,9 +1,10 @@
-# ui/modeling_ui.R
-
-# UI pour la modélisation
 modeling_ui <- function() {
-  tagList(
-    plotOutput("model_auc_plot"),
-    tableOutput("model_summary")
+  tabItem(
+    tabName = "modeling",
+    fluidPage(
+      h2("Modeling"),
+      p("Page for building and testing predictive models for churn.")
+      # Ajoutez ici les composants pour la modélisation (boutons, graphiques, etc.)
+    )
   )
 }

@@ -1,146 +1,88 @@
-#app
-
-# app.R
-
-# Charger les librairies
 library(shiny)
-library(shinydashboard)  # Pour un look moderne, si nécessaire
-library(dplyr)
-library(ggplot2)
-library(caret)          # Pour le machine learning
+library(shinydashboard)
 
-# Charger les fonctions
-source("R/functions.R")
+# Charger les fichiers R pour l'interface et les fonctions
 source("R/exploratory_analysis.R")
-source("R/modeling.R")
-source("R/resampling.R")
-source("R/hyperparameter_tuning.R")
-
-# Charger les interfaces utilisateur
 source("ui/exploratory_ui.R")
 source("ui/modeling_ui.R")
 source("ui/resampling_ui.R")
 source("ui/conclusions_ui.R")
 
 # Définir l'interface utilisateur
-ui <- fluidPage(
-  titlePanel("Analyse et Prédiction de Churn"),
-  
-  sidebarLayout(
-    sidebarPanel(
-      selectInput("dataset", "Sélectionner un jeu de données :", 
-                  choices = c("Credit Fraud", "Bank Marketing", "Employee Attrition")),
-      actionButton("run_analysis", "Lancer l'Analyse")
+ui <- dashboardPage(
+  dashboardHeader(title = "Profil de données"),
+  dashboardSidebar(
+    sidebarMenu(
+      menuItem("Home", tabName = "home", icon = icon("home")),
+      menuItem("Exploratory Analysis", tabName = "exploratory", icon = icon("chart-bar")),
+      menuItem("Modeling", tabName = "modeling", icon = icon("cogs")),
+      menuItem("Resampling", tabName = "resampling", icon = icon("sync")),
+      menuItem("Conclusions", tabName = "conclusions", icon = icon("check-circle"))
+    )
+  ),
+  dashboardBody(
+    tags$head(
+      tags$link(rel = "stylesheet", type = "text/css", href = "style.css") # Lien vers le fichier CSS
     ),
-    
-    mainPanel(
-      tabsetPanel(
-        tabPanel("Exploration des Données", 
-                 uiOutput("exploratory_ui")),
-        
-        tabPanel("Modélisation",
-                 uiOutput("modeling_ui")),
-        
-        tabPanel("Sur-échantillonnage/Sous-échantillonnage",
-                 uiOutput("resampling_ui")),
-        
-        tabPanel("Conclusions",
-                 uiOutput("conclusions_ui"))
-      )
+    tabItems(
+      # Page d'accueil
+      tabItem(tabName = "home",
+              h1("Welcome to the Data Profile"),
+              fluidRow(
+                box(
+                  title = "About this tool", width = 12, status = "primary",
+                  p("This tool allows you to explore different datasets related to Credit Fraud, Bank Marketing, and Employee Attrition.")
+                )
+              ),
+              fluidRow(
+                box(
+                  title = "Explore Datasets", width = 3, status = "info",
+                  actionButton("explore_btn", "Go to Exploratory Analysis", icon = icon("chart-bar"))
+                ),
+                box(
+                  title = "Modeling", width = 3, status = "info",
+                  actionButton("model_btn", "Go to Modeling", icon = icon("cogs"))
+                ),
+                box(
+                  title = "Resampling", width = 3, status = "info",
+                  actionButton("resample_btn", "Go to Resampling", icon = icon("sync"))
+                ),
+                box(
+                  title = "Conclusions", width = 3, status = "info",
+                  actionButton("conclude_btn", "Go to Conclusions", icon = icon("check-circle"))
+                )
+              )
+      ),
+      exploratory_ui(),
+      modeling_ui(),
+      resampling_ui(),
+      conclusions_ui()
     )
   )
 )
 
-# Définir la logique serveur
+# Définir le serveur
 server <- function(input, output, session) {
+  exploratory_server(input, output, session)
+  #modeling_server(input, output, session)
+  #resampling_server(input, output, session)
+  #conclusions_server(input, output, session)
   
-  data <- reactive({
-    dataset <- switch(input$dataset,
-                      "Credit Fraud" = load_credit_fraud(),
-                      "Bank Marketing" = load_bank_marketing(),
-                      "Employee Attrition" = load_employee_attrition())
-    dataset
+  # Navigation entre les pages
+  observeEvent(input$explore_btn, {
+    updateTabItems(session, "exploratory")
   })
   
-  observeEvent(input$run_analysis, {
-    # Pour l'UI d'analyse exploratoire
-    output$exploratory_ui <- renderUI({
-      tagList(
-        plotOutput("missing_values_plot"),
-        plotOutput("churn_distribution_plot"),
-        plotOutput("categorical_churn_plot"),
-        plotOutput("numerical_churn_plot"),
-        plotOutput("correlation_matrix_plot")
-      )
-    })
-    
-    # Pour l'UI de modélisation
-    output$modeling_ui <- renderUI({
-      tagList(
-        plotOutput("model_auc_plot"),
-        tableOutput("model_summary")
-      )
-    })
-    
-    # Pour l'UI de resampling
-    output$resampling_ui <- renderUI({
-      tagList(
-        plotOutput("sampling_auc_plot"),
-        tableOutput("sampling_summary")
-      )
-    })
-    
-    # Pour l'UI des conclusions
-    output$conclusions_ui <- renderUI({
-      tagList(
-        verbatimTextOutput("conclusions_text")
-      )
-    })
-    
-    output$missing_values_plot <- renderPlot({
-      plot_missing_values(data())
-    })
-    
-    output$churn_distribution_plot <- renderPlot({
-      plot_churn_distribution(data())
-    })
-    
-    output$categorical_churn_plot <- renderPlot({
-      plot_categorical_churn(data())
-    })
-    
-    output$numerical_churn_plot <- renderPlot({
-      plot_numerical_churn(data())
-    })
-    
-    output$correlation_matrix_plot <- renderPlot({
-      plot_correlation_matrix(data())
-    })
+  observeEvent(input$model_btn, {
+    updateTabItems(session, "modeling")
   })
   
-  output$model_auc_plot <- renderPlot({
-    model_results <- train_models(data())
-    plot_auc(model_results)
+  observeEvent(input$resample_btn, {
+    updateTabItems(session, "resampling")
   })
   
-  output$model_summary <- renderTable({
-    model_results <- train_models(data())
-    summary_table(model_results)
-  })
-  
-  output$sampling_auc_plot <- renderPlot({
-    sampling_results <- apply_sampling_methods(data())
-    plot_sampling_auc(sampling_results)
-  })
-  
-  output$sampling_summary <- renderTable({
-    sampling_results <- apply_sampling_methods(data())
-    summary_sampling_table(sampling_results)
-  })
-  
-  output$conclusions_text <- renderText({
-    # Insérer ici le texte des conclusions basées sur les résultats
-    "Conclusions: Ici, vous pouvez résumer les résultats et les recommandations."
+  observeEvent(input$conclude_btn, {
+    updateTabItems(session, "conclusions")
   })
 }
 

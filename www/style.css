@@ -1,0 +1,33 @@
+/* Styles pour la barre de navigation */
+.navbar-default {
+  background-color: #3F3685;
+  border: none;
+}
+
+.navbar-brand {
+  background-color: #ffffff;
+  padding: 10px;
+}
+
+/* Styles pour les boutons */
+.button {
+  background-color: #0078d4;
+  color: #fff;
+  border: 1px solid #0078d4;
+  padding: 10px;
+}
+
+.button:hover {
+  background-color: #005ba1;
+  border-color: #005597;
+}
+
+/* Titres et paragraphes */
+h1, h2, h3, h4 {
+  font-weight: bold;
+  color: #3F3685;
+}
+
+p {
+  font-size: 16px;
+}

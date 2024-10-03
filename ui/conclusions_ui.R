@@ -1,8 +1,10 @@
-# ui/conclusions_ui.R
-
-# UI pour les conclusions
 conclusions_ui <- function() {
-  tagList(
-    verbatimTextOutput("conclusions_text")
+  tabItem(
+    tabName = "conclusions",
+    fluidPage(
+      h2("Conclusions"),
+      p("Final results and insights from the analyses.")
+      # Ajoutez ici les composants pour les conclusions finales (résumés, graphiques, etc.)
+    )
   )
 }

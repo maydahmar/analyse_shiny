@@ -1,43 +1,61 @@
-# R/exploratory_analysis.R
-
 library(ggplot2)
-library(corrplot)  # Pour afficher la matrice de corrélation
+library(dplyr)
+library(ggcorrplot)
 
-# Fonction pour visualiser les valeurs manquantes
-plot_missing_values <- function(data) {
-  missing_values <- colSums(is.na(data))
-  barplot(missing_values, main="Valeurs Manquantes par Variable", las=2, col="blue")
-}
-
-# Fonction pour afficher la distribution de churn
-plot_churn_distribution <- function(data) {
-  ggplot(data, aes(x = churn)) +
-    geom_bar(fill = "steelblue") +
-    labs(title = "Distribution de Churn", x = "Churn", y = "Nombre d'Individus")
-}
-
-# Fonction pour visualiser le churn selon les variables catégorielles
-plot_categorical_churn <- function(data) {
-  cat_vars <- sapply(data, is.factor)
-  for (var in names(data)[cat_vars]) {
-    ggplot(data, aes_string(x = var, fill = "churn")) +
-      geom_bar(position = "fill") +
-      labs(title = paste("Churn par", var), y = "Proportion")
+# Charger et préparer les données en fonction de la sélection
+load_dataset <- function(dataset_name) {
+  if (dataset_name == "Credit fraud") {
+    return(read.csv("data/credit_fraud.csv"))
+  } else if (dataset_name == "Bank marketing") {
+    return(read.csv("data/bank_marketing.csv"))
+  } else if (dataset_name == "Employee attrition") {
+    return(read.csv("data/employee_attrition.csv"))
+  } else if (dataset_name == "Bank marketing full") {
+    return(read.csv("/mnt/data/bank-additional-full.csv")) # Fichier chargé
   }
 }
 
-# Fonction pour visualiser le churn selon les variables numériques
-plot_numerical_churn <- function(data) {
-  num_vars <- sapply(data, is.numeric)
-  for (var in names(data)[num_vars]) {
-    ggplot(data, aes_string(x = var, fill = "churn")) +
-      geom_histogram(position = "identity", alpha = 0.5, bins = 30) +
-      labs(title = paste("Distribution de", var, "selon Churn"))
-  }
+# Fonction pour créer un résumé du dataset
+summarize_data <- function(data) {
+  summary(data)
 }
 
-# Fonction pour afficher la matrice de corrélation
-plot_correlation_matrix <- function(data) {
-  cor_matrix <- cor(data[, sapply(data, is.numeric)], use = "complete.obs")
-  corrplot(cor_matrix, method = "circle")
+# Fonction pour créer un graphique de churn
+plot_churn <- function(data, variable) {
+  ggplot(data, aes_string(x = variable, fill = "Churn")) +
+    geom_bar(position = "fill") +
+    labs(title = paste("Distribution de", variable, "par churn"), y = "Proportion")
+}
+
+# Fonction pour créer une matrice de corrélation
+plot_correlation <- function(data) {
+  correlation_matrix <- cor(select_if(data, is.numeric))
+  ggcorrplot(correlation_matrix, method = "circle")
+}
+
+# Module serveur pour l'analyse exploratoire
+exploratory_server <- function(input, output, session) {
+  
+  # Réagir au chargement des données
+  dataset <- eventReactive(input$load_data, {
+    data <- load_dataset(input$dataset)
+    updateSelectInput(session, "variable", choices = names(data))
+    return(data)
+  })
+  
+  # Résumé des données
+  output$data_summary <- renderTable({
+    summarize_data(dataset())
+  })
+  
+  # Graphique de churn
+  output$churn_plot <- renderPlot({
+    req(input$variable)
+    plot_churn(dataset(), input$variable)
+  })
+  
+  # Matrice de corrélation
+  output$correlation_plot <- renderPlot({
+    plot_correlation(dataset())
+  })
 }
