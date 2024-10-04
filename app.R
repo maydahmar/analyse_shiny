@@ -4,7 +4,7 @@ source("ui/exploratory_ui.R")
 library(shiny)
 library(shinydashboard)
 library(shinyjs)
-
+library(readxl)  # Charger readxl pour lire les fichiers Excel
 
 # Définir l'interface utilisateur
 ui <- dashboardPage(
@@ -14,17 +14,16 @@ ui <- dashboardPage(
     sidebarMenu(
       menuItem("Home", tabName = "home", icon = icon("home")),
       
-      
       # Choix du dataset
       selectInput(
         inputId = "dataset_choice",
         label = "Choisir un dataset",
         choices = list(
-          "Credit Fraud" = "credit_fraud.csv",
-          "Bank Marketing" = "bank_marketing.csv",
-          "Employee Attrition" = "employee_attrition.csv"
+          "Credit Fraud" = "creditcard.csv",
+          "Bank Marketing" = "bank-additional-full.csv",
+          "Employee Attrition" = "whole data.csv"
         ),
-        selected = "credit_fraud.csv"
+        selected = "creditcard.csv"
       )
     )
   ),
@@ -39,7 +38,6 @@ ui <- dashboardPage(
         style = "display: none;"  # Cacher cette section au départ
     )
   )
-  
 )
 
 # Définir le serveur
@@ -48,11 +46,35 @@ server <- function(input, output, session) {
   # Charger dynamiquement le dataset sélectionné
   selected_dataset <- reactive({
     file_path <- file.path("data", input$dataset_choice)
-    read.csv(file_path, stringsAsFactors = FALSE)
-  })
+    
+      
+      # Vérifier le type de fichier et le charger correctement
+      if (grepl("\\.csv$", file_path)) {
+        # Lire les premières lignes pour détecter le séparateur
+        header_line <- readLines(file_path, n = 1)
+        
+        # Vérifier quel séparateur semble être utilisé
+        sep_guess <- if (grepl(";", header_line)) {
+          ";"
+        } else if (grepl(",", header_line)) {
+          ","
+        } else if (grepl("\\t", header_line)) {
+          "\t"
+        } else {
+          stop("Impossible de détecter le séparateur du fichier CSV")
+        }
+        
+        # Charger le fichier avec le bon séparateur
+        read.csv(file_path, stringsAsFactors = FALSE, sep = sep_guess)
+      } else if (grepl("\\.xlsx$", file_path)) {
+        read_excel(file_path)
+      } else {
+        stop("Format de fichier non pris en charge")
+      }
+    })
   
   # Appel du serveur spécifique de l'analyse exploratoire
-  callModule(exploratory_analysis, "exploratory", selected_dataset = selected_dataset)
+  exploratory_analysis(input, output, session, selected_dataset = selected_dataset)
   
   # Observer les changements de 'navigate_to' pour afficher l'interface Exploratory Analysis
   observeEvent(input$navigate_to, {
@@ -64,10 +86,14 @@ server <- function(input, output, session) {
   
   # Observer le clic sur le bouton de retour pour revenir à la page d'accueil
   observeEvent(input$go_back, {
-    shinyjs::hide("exploratory_ui")
-    shinyjs::show("home-content")
+    shinyjs::hide("exploratory-content")  # Cacher la section Exploratory Analysis
+    shinyjs::show("home-content")  # Afficher la section accueil
   })
   
+  # Réinitialiser l'input `navigate_to` à chaque fois que la page d'accueil est affichée
+  observeEvent(input$go_back, {
+    updateTextInput(session, "navigate_to", value = "")
+  })
 }
 
 # Lancer l'application

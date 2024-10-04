@@ -122,6 +122,13 @@
 </script>
 
 
+  <script type="text/javascript">
+  // Réinitialiser navigate_to après chaque clic
+  Shiny.addCustomMessageHandler('resetNavigate', function(message) {
+    Shiny.setInputValue('navigate_to', null);
+  });
+</script>
+
 
 
 

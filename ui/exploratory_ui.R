@@ -1,25 +1,32 @@
 exploratory_ui <- function() {
   fluidPage(
     useShinyjs(),  # Charger shinyjs pour pouvoir utiliser les fonctions de navigation
-    actionButton("go_back", "go back home"),  # Bouton pour revenir à la page d'accueil
+    actionButton("go_back", "Go Back Home"),  # Bouton pour revenir à la page d'accueil
     titlePanel("Exploratory Data Analysis"),
+    
+    # Afficher le tableau du dataset
     fluidRow(
-      box(title = "Dimensions et valeurs manquantes", width = 6, status = "primary", solidHeader = TRUE,
-          tableOutput("dataset_summary")),
-      box(title = "Proportion de churn", width = 6, status = "primary", solidHeader = TRUE,
+      box(title = "Tableau du Dataset", width = 12, status = "primary", solidHeader = TRUE,
+          DT::dataTableOutput("dataset_table"))
+    ),
+    
+    # Afficher les dimensions, les valeurs manquantes, et les attributs constants
+    fluidRow(
+      box(title = "Informations sur le Dataset", width = 6, status = "info", solidHeader = TRUE,
+          tableOutput("dataset_info"))
+    ),
+    
+    # Afficher la proportion de churn
+    fluidRow(
+      box(title = "Proportion de Churn", width = 6, status = "info", solidHeader = TRUE,
           plotOutput("churn_plot"))
     ),
-    fluidRow(
-      box(title = "Variables catégorielles", width = 12, status = "info", solidHeader = TRUE,
-          plotOutput("cat_var_plot"))
-    ),
-    fluidRow(
-      box(title = "Variables numériques - Churn vs. Non-Churn", width = 12, status = "info", solidHeader = TRUE,
-          plotOutput("num_var_plot"))
-    ),
-    fluidRow(
-      box(title = "Matrice de corrélation", width = 12, status = "danger", solidHeader = TRUE,
-          plotOutput("corr_matrix"))
-    )
+    
+    
+    
+  
+    
   )
+  
+  
 }
