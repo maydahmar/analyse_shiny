@@ -94,7 +94,7 @@ exploratory_analysis <- function(input, output, session, selected_dataset) {
     }
     par(mfrow = c(1, 1))  # Réinitialiser la disposition des graphiques
   })
-
+  
   
   
   

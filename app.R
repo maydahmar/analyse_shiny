@@ -47,31 +47,31 @@ server <- function(input, output, session) {
   selected_dataset <- reactive({
     file_path <- file.path("data", input$dataset_choice)
     
+    
+    # Vérifier le type de fichier et le charger correctement
+    if (grepl("\\.csv$", file_path)) {
+      # Lire les premières lignes pour détecter le séparateur
+      header_line <- readLines(file_path, n = 1)
       
-      # Vérifier le type de fichier et le charger correctement
-      if (grepl("\\.csv$", file_path)) {
-        # Lire les premières lignes pour détecter le séparateur
-        header_line <- readLines(file_path, n = 1)
-        
-        # Vérifier quel séparateur semble être utilisé
-        sep_guess <- if (grepl(";", header_line)) {
-          ";"
-        } else if (grepl(",", header_line)) {
-          ","
-        } else if (grepl("\\t", header_line)) {
-          "\t"
-        } else {
-          stop("Impossible de détecter le séparateur du fichier CSV")
-        }
-        
-        # Charger le fichier avec le bon séparateur
-        read.csv(file_path, stringsAsFactors = FALSE, sep = sep_guess)
-      } else if (grepl("\\.xlsx$", file_path)) {
-        read_excel(file_path)
+      # Vérifier quel séparateur semble être utilisé
+      sep_guess <- if (grepl(";", header_line)) {
+        ";"
+      } else if (grepl(",", header_line)) {
+        ","
+      } else if (grepl("\\t", header_line)) {
+        "\t"
       } else {
-        stop("Format de fichier non pris en charge")
+        stop("Impossible de détecter le séparateur du fichier CSV")
       }
-    })
+      
+      # Charger le fichier avec le bon séparateur
+      read.csv(file_path, stringsAsFactors = FALSE, sep = sep_guess)
+    } else if (grepl("\\.xlsx$", file_path)) {
+      read_excel(file_path)
+    } else {
+      stop("Format de fichier non pris en charge")
+    }
+  })
   
   # Appel du serveur spécifique de l'analyse exploratoire
   exploratory_analysis(input, output, session, selected_dataset = selected_dataset)
