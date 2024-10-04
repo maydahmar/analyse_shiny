@@ -75,4 +75,23 @@ check_missing_values <- function(data) {
   }
 }
 
+# Fonction pour entraîner un SVM avec différents noyaux et retourner l'AUC
+evaluate_svm_kernel <- function(train_data, test_data, y_train, y_test, kernel_type) {
+  # Entraîner le modèle SVM avec un noyau donné
+  svm_model <- svm(y_train ~ ., data = train_data, kernel = kernel_type, probability = TRUE)
+  
+  # Prédiction sur les données de test
+  predictions_prob_svm <- predict(svm_model, newdata = test_data, probability = TRUE)
+  
+  # Extraire les probabilités pour la classe positive
+  predictions_prob_svm_values <- attr(predictions_prob_svm, "probabilities")[, 2]
+  
+  # Calculer l'AUC pour le modèle SVM
+  roc_curve_svm <- roc(test_data$y_test, predictions_prob_svm_values)
+  auc_value_svm <- auc(roc_curve_svm)
+  
+  # Retourner l'AUC et le noyau testé
+  return(list(kernel = kernel_type, auc = auc_value_svm))
+}
+
 # Autres fonctions utilitaires peuvent être ajoutées ici

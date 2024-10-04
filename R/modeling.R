@@ -115,6 +115,20 @@ train_bank <- function(train_test_data) {
   
   # Afficher l'AUC du modèle SVM sans noyau
   print(paste("AUC du modèle SVM sans noyau :", auc_value_svm))
+  
+  #Tester les différents noyaux
+  kernels <- c("linear", "radial", "polynomial", "sigmoid")
+  results <- lapply(kernels, function(k) evaluate_svm_kernel(train_data, test_data, y_train, y_test, k))
+  
+  # Afficher les résultats
+  for (result in results) {
+    print(paste("Kernel:", result$kernel, "- AUC:", result$auc))
+  }
+  
+  # Trouver le noyau avec la meilleure AUC
+  best_result <- results[[which.max(sapply(results, function(x) x$auc))]]
+  print(paste("Meilleur kernel:", best_result$kernel, "- AUC:", best_result$auc))
+  
 }
 # Fonction pour afficher l'AUC des modèles
 plot_auc <- function(model_results) {
