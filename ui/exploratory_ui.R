@@ -1,27 +1,32 @@
 exploratory_ui <- function() {
-  tabItem(
-    tabName = "exploratory",
-    fluidPage(
-      h2("Exploratory Analysis"),
-      sidebarLayout(
-        sidebarPanel(
-          selectInput("dataset", "Choisir un dataset:",
-                      choices = c("Credit fraud", "Bank marketing", "Employee attrition", "Bank marketing full")),
-          actionButton("load_data", "Charger les données"),
-          hr(),
-          selectInput("variable", "Choisir une variable:", choices = NULL),
-          selectInput("plot_type", "Type de graphique:", 
-                      choices = c("Histogramme", "Barplot", "Boxplot")),
-          hr()
-        ),
-        mainPanel(
-          tabsetPanel(
-            tabPanel("Résumé des données", tableOutput("data_summary")),
-            tabPanel("Graphique de churn", plotOutput("churn_plot")),
-            tabPanel("Corrélations", plotOutput("correlation_plot"))
-          )
-        )
-      )
-    )
+  fluidPage(
+    useShinyjs(),  # Charger shinyjs pour pouvoir utiliser les fonctions de navigation
+    actionButton("go_back", "Go Back Home"),  # Bouton pour revenir à la page d'accueil
+    titlePanel("Exploratory Data Analysis"),
+    
+    # Afficher le tableau du dataset
+    fluidRow(
+      box(title = "Tableau du Dataset", width = 12, status = "primary", solidHeader = TRUE,
+          DT::dataTableOutput("dataset_table"))
+    ),
+    
+    # Afficher les dimensions, les valeurs manquantes, et les attributs constants
+    fluidRow(
+      box(title = "Informations sur le Dataset", width = 6, status = "info", solidHeader = TRUE,
+          tableOutput("dataset_info"))
+    ),
+    
+    # Afficher la proportion de churn
+    fluidRow(
+      box(title = "Proportion de Churn", width = 6, status = "info", solidHeader = TRUE,
+          plotOutput("churn_plot"))
+    ),
+    
+    
+    
+    
+    
   )
+  
+  
 }

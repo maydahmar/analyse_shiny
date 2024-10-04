@@ -7,6 +7,8 @@
   <link rel="stylesheet" href="//use.fontawesome.com/releases/v6.0.0/css/all.css">
   <!-- Inclure le fichier CSS -->
   <link rel="stylesheet" type="text/css" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/shiny@1.7.0/shiny.min.js"></script>
+
 </head>
 <body>
   
@@ -88,21 +90,47 @@
     </ul>
   </div>
   
-  <!-- Section pour les images des datasets -->
-<div class="datasets-images">
-  <div class="dataset-image">
-    <img src="credit_fraud.JPG" alt="Credit Fraud Dataset">
-    <p>Credit Fraud </p>
+    <!-- Section pour les images des datasets -->
+  <div class="datasets-images">
+    <div class="dataset-image">
+      <img src="credit_fraud.JPG" alt="Credit Fraud Dataset">
+      <p>Credit Fraud </p>
+    </div>
+    <div class="dataset-image">
+      <img src="customer_churn.JPG" alt="Bank Marketing Dataset">
+      <p>Bank Marketing </p>
+    </div>
+    <div class="dataset-image">
+      <img src="employee-churn.JPG" alt="Employee Attrition Dataset">
+      <p>Employee Attrition </p>
+    </div>
   </div>
-  <div class="dataset-image">
-    <img src="customer_churn.JPG" alt="Bank Marketing Dataset">
-    <p>Bank Marketing </p>
-  </div>
-  <div class="dataset-image">
-    <img src="employee-churn.JPG" alt="Employee Attrition Dataset">
-    <p>Employee Attrition </p>
-  </div>
-</div>
+  
+  <script type="text/javascript">
+  document.getElementById('link-exploratory').onclick = function() {
+    console.log("Exploratory Analysis link clicked");
+    Shiny.setInputValue('navigate_to', 'exploratory');
+  };
+</script>
+
+  <a href="#" id="link-home">Retour à l'accueil</a>
+  
+  <script type="text/javascript">
+  document.getElementById('link-home').onclick = function() {
+    Shiny.setInputValue('navigate_to', 'home');
+  };
+</script>
+
+
+  <script type="text/javascript">
+  // Réinitialiser navigate_to après chaque clic
+  Shiny.addCustomMessageHandler('resetNavigate', function(message) {
+    Shiny.setInputValue('navigate_to', null);
+  });
+</script>
+
+
+
 
 </body>
 </html>
