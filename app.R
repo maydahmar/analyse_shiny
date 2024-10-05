@@ -10,7 +10,7 @@ library(readxl)  # Charger readxl pour lire les fichiers Excel
 ui <- dashboardPage(
   dashboardHeader(title = "Profil de données"),
   dashboardSidebar(
-    id = "tabs",
+    
     sidebarMenu(
       menuItem("Home", tabName = "home", icon = icon("home")),
       
@@ -90,7 +90,7 @@ server <- function(input, output, session) {
     shinyjs::show("home-content")  # Afficher la section accueil
   })
   
-  # Réinitialiser l'input `navigate_to` à chaque fois que la page d'accueil est affichée
+  # Réinitialiser l'input navigate_to à chaque fois que la page d'accueil est affichée
   observeEvent(input$go_back, {
     updateTextInput(session, "navigate_to", value = "")
   })
