@@ -113,3 +113,86 @@
   font-weight: bold;
   margin-top: 5px;
 }
+
+/* Section des titres et des paragraphes */
+h2 {
+  color: #2E8B57;
+  font-family: 'Arial', sans-serif;
+  font-size: 26px;
+  border-bottom: 2px solid #2E8B57;
+  padding-bottom: 10px;
+  margin-bottom: 15px;
+}
+
+h3 {
+  color: #1E90FF;
+  font-family: 'Verdana', sans-serif;
+  margin-top: 20px;
+}
+
+p, ul {
+  font-family: 'Helvetica', sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  color: #333;
+}
+
+ul {
+  list-style-type: square;
+}
+
+div.analysis-container {
+  background-color: #f9f9f9;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  transition: box-shadow 0.3s ease;
+}
+
+div.analysis-container:hover {
+  box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+}
+
+/* Transitions pour une entrée en douceur */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+div.fade-in {
+  animation: fadeIn 1s ease-in-out;
+}
+
+/* Styles pour les infobulles */
+.tooltip {
+  position: relative;
+  display: inline-block;
+}
+
+.tooltip .tooltiptext {
+  visibility: hidden;
+  width: 200px;
+  background-color: #555;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 5px;
+  position: absolute;
+  z-index: 1;
+  bottom: 125%; /* Position au-dessus de l'élément */
+  left: 50%;
+  margin-left: -100px;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.tooltip:hover .tooltiptext {
+  visibility: visible;
+  opacity: 1;
+}

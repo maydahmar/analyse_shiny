@@ -1,15 +1,17 @@
 exploratory_ui <- function() {
   fluidPage(
     useShinyjs(), # Charger shinyjs pour pouvoir utiliser les fonctions de navigation
+    tags$head(
+      tags$link(rel = "stylesheet", type = "text/css", href = "style.css")  # Lien vers le fichier CSS
+    ),
     
-    
+    tags$div(id = "loading-message", style = "display:none;", "Loading..."),
     
     actionButton("go_back", "Go Back Home"),  # Bouton pour revenir à la page d'accueil
     titlePanel("Exploratory Data Analysis"),
     
     # Définir les onglets
     tabsetPanel(
-      
       # Onglet Data Info
       tabPanel("Data Info",
                fluidRow(
@@ -72,7 +74,16 @@ exploratory_ui <- function() {
                      verbatimTextOutput("cramersV")
                  )
                )
+      ),
+      
+      tabPanel("Rapport (Conclusion)",
+               fluidRow(
+                 box(title = "Analyse approfondie du dataset 'Bank Marketing'", width = 12, status = "success", solidHeader = TRUE,
+                     uiOutput("conclusion_text")  # Utiliser uiOutput au lieu de verbatimTextOutput
+                 )
+               )
       )
+      
     )
   )
 }

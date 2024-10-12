@@ -23,8 +23,11 @@ ui <- dashboardPage(
           "Bank Marketing" = "bank-additional-full.csv",
           "Employee Attrition" = "whole data.csv"
         ),
-        selected = "creditcard.csv"
-      )
+        selected = "bank-additional-full.csv"
+      ), 
+      
+      # Ajouter le menu item pour Exploratory Analysis
+      menuItem("Exploratory Analysis", icon = icon("chart-bar"), tabName = "exploratory")
     )
   ),
   
@@ -43,37 +46,25 @@ ui <- dashboardPage(
 # Définir le serveur
 server <- function(input, output, session) {
   
-  # Charger dynamiquement le dataset sélectionné
-  selected_dataset <- reactive({
-    file_path <- file.path("data", input$dataset_choice)
-    
-    
-    # Vérifier le type de fichier et le charger correctement
-    if (grepl("\\.csv$", file_path)) {
-      # Lire les premières lignes pour détecter le séparateur
-      header_line <- readLines(file_path, n = 1)
+  # Charger dynamiquement le dataset sélectionné uniquement lors du clic sur "Exploratory Analysis"
+  selected_dataset <- eventReactive(input$navigate_to, {
+    if (input$navigate_to == 'exploratory') {
+      file_path <- file.path("data", input$dataset_choice)
       
-      # Vérifier quel séparateur semble être utilisé
-      sep_guess <- if (grepl(";", header_line)) {
-        ";"
-      } else if (grepl(",", header_line)) {
-        ","
-      } else if (grepl("\\t", header_line)) {
-        "\t"
+      # Vérifier le type de fichier et le charger correctement
+      if (grepl("\\.csv$", file_path)) {
+        header_line <- readLines(file_path, n = 1)
+        sep_guess <- if (grepl(";", header_line)) ";" else if (grepl(",", header_line)) "," else if (grepl("\\t", header_line)) "\t" else stop("Impossible de détecter le séparateur du fichier CSV")
+        read.csv(file_path, stringsAsFactors = FALSE, sep = sep_guess)
+      } else if (grepl("\\.xlsx$", file_path)) {
+        read_excel(file_path)
       } else {
-        stop("Impossible de détecter le séparateur du fichier CSV")
+        stop("Format de fichier non pris en charge")
       }
-      
-      # Charger le fichier avec le bon séparateur
-      read.csv(file_path, stringsAsFactors = FALSE, sep = sep_guess)
-    } else if (grepl("\\.xlsx$", file_path)) {
-      read_excel(file_path)
-    } else {
-      stop("Format de fichier non pris en charge")
     }
   })
   
-  # Appel du serveur spécifique de l'analyse exploratoire
+  # Appel du serveur spécifique de l'analyse exploratoire avec les données chargées
   exploratory_analysis(input, output, session, selected_dataset = selected_dataset)
   
   # Observer les changements de 'navigate_to' pour afficher l'interface Exploratory Analysis
@@ -81,19 +72,41 @@ server <- function(input, output, session) {
     if (input$navigate_to == 'exploratory') {
       shinyjs::hide("home-content")  # Cacher la section accueil
       shinyjs::show("exploratory-content")  # Afficher la section Exploratory Analysis
+      
+      # Réinitialiser la valeur de 'navigate_to' après avoir affiché l'Exploratory Analysis
+      session$sendCustomMessage(type = 'resetNavigate', message = list())
     }
   })
+  
+  # Observer le clic sur l'item du menu latéral
+  observeEvent(input$sidebarItemExpanded, {
+    if (input$sidebarItemExpanded == "exploratory") {
+      shinyjs::hide("home-content")  # Cacher la section accueil
+      shinyjs::show("exploratory-content")  # Afficher la section Exploratory Analysis
+    }
+  })
+  
   
   # Observer le clic sur le bouton de retour pour revenir à la page d'accueil
   observeEvent(input$go_back, {
     shinyjs::hide("exploratory-content")  # Cacher la section Exploratory Analysis
     shinyjs::show("home-content")  # Afficher la section accueil
+    
+    # Réinitialiser la valeur de 'navigate_to'
+    session$sendCustomMessage(type = 'resetNavigate', message = list())
   })
   
-  # Réinitialiser l'input navigate_to à chaque fois que la page d'accueil est affichée
-  observeEvent(input$go_back, {
-    updateTextInput(session, "navigate_to", value = "")
+  # Observer le clic sur le raccourci Exploratory Analysis dans la barre latérale
+  observeEvent(input$sidebarItemExpanded, {
+    if (input$sidebarItemExpanded == "exploratory") {
+      shinyjs::hide("home-content")  # Cacher la section accueil
+      shinyjs::show("exploratory-content")  # Afficher la section Exploratory Analysis
+    }
   })
+
+  
+  
+  
 }
 
 # Lancer l'application

@@ -17,6 +17,61 @@ exploratory_analysis <- function(input, output, session, selected_dataset) {
     )
   })
   
+  
+  # Fichier server.R ou partie serveur dans app.R
+  output$conclusion_text <- renderUI({
+    HTML("
+    <div class='analysis-container fade-in'>
+  
+
+      <h3>Dimensions du Dataset et Qualité des Données</h3>
+      <p>Le dataset contient <strong>41,188 observations</strong> et <strong>21 colonnes</strong>. Aucune valeur manquante n’est présente, ce qui est un point positif pour garantir l'intégrité des analyses.</p>
+      
+      
+      <h3>Proportion de Churn</h3>
+      <p>L'analyse de la variable cible <code>y</code> montre un <span class='tooltip'>déséquilibre des classes<span class='tooltiptext'> une majorité des individus n'ont pas churné (répondant 'no'), tandis qu'un petit pourcentage a churné (répondant 'yes'). Cela souligne la nécessité d'une approche spécifique, comme le re-sampling (sur-échantillonnage ou sous-échantillonnage) ou l’utilisation de méthodes adaptées aux classes déséquilibrées (ex. : SMOTE).</p>
+      <p>Cet aspect doit être pris en compte lors de la modélisation pour éviter que le modèle ne devienne biaisé en faveur de la classe majoritaire.</p>
+      
+      <h3>Analyse des Variables Catégorielles</h3>
+      </p>Les graphiques produits montrent les répartitions de churn pour les variables catégorielles par exemple:</p>
+      <ul>
+        <li><strong>Statut Marital</strong> : La majorité des churners et non churners sont mariés. Cependant, la proportion de churners semble plus élevée chez les individus célbataire.</li>
+        <li><strong>Job :</strong> Certains métiers comme les etudiants et les retraités semblent présenter une proportion de churn légèrement plus élevée, mais cela reste subtil.</li>
+        <li><strong> Contact : </strong>Les individus contactés via téléphone sont en majorité non churners, mais il serait utile de creuser davantage l'effet des différentes méthodes de contact.</li>
+        <li><strong>Housing loan (prêt immobilier) :</strong> : Les individus sans prêt immobilier semblent avoir une proportion légèrement plus élevée de churners.</li>
+        <li><strong>Éducation :</strong>  Les niveaux d'éducation plus bas (ex. : 'litterate') semblent avoir une proportion de churn plus importante que ceux ayant une éducation plus basique.</li>
+      </ul>
+
+      <h3>Analyse des Variables Numériques</h3>
+      <ul>
+        <p>Des histogrammes montrent la distribution des variables numériques en fonction du churn:</p>
+        <li><strong>Age :</strong> On remarque que la population la plus jeune (moins de 30 ans) semble churner moins que la population plus âgée. Les individus entre 30 et 60 ans ont une distribution relativement homogène, mais avec des churners répartis tout au long de la distribution d'âge.</li>
+        <li><strong>Durée de l'appel :</strong> Plus la durée de l'appel est longue, plus la probabilité de churn est élevée.</li>
+      </ul>
+
+      <h3>Interprétation de la Matrice de Corrélation</h3>
+
+      <ul>
+        <li><strong>Durée des appels :</strong> La variable <code>duration</code> est positivement corrélée avec <code>previous</code> (nombre de contacts précédents), indiquant que les clients ayant été contactés plusieurs fois dans le passé passent plus de temps au téléphone. Cela pourrait refléter un engagement accru lors de la campagne.</li>
+        
+        <li><strong>Facteurs économiques :</strong> Une forte corrélation positive est observée entre <code>emp.var.rate</code> (taux d'emploi) et <code>euribor3m</code> (taux Euribor à 3 mois). Cela est typique d'une relation économique, les deux indicateurs évoluant souvent ensemble.</li>
+        
+        <li><strong>Fréquence des contacts :</strong> Une légère corrélation positive entre <code>pdays</code> (jours depuis le dernier contact) et <code>campaign</code> (nombre de contacts) montre que les clients contactés plusieurs fois lors d'une campagne ont tendance à être recontactés après une longue période.</li>
+        
+        <li><strong>Variables de campagne et churn :</strong> La corrélation entre la durée de l’appel et le churn est la plus notable. Les interactions plus longues sont associées à une probabilité plus élevée de churn.</li>
+      </ul>
+
+      <h3>Conclusions</h3>
+      <p>Les variables telles que la durée de l'appel, le statut marital, l'éducation et l'âge sont étroitement liées au churn. Cela indique des pistes d'optimisation pour les campagnes marketing.</p>
+
+    
+    </div>
+  ")
+  })
+  
+  
+  
+  
   # Afficher les dimensions du dataset, les valeurs manquantes et les attributs constants
   output$dataset_info <- renderTable({
     dataset <- selected_dataset()

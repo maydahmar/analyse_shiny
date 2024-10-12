@@ -106,28 +106,25 @@
     </div>
   </div>
   
-  <script type="text/javascript">
+<script type="text/javascript">
+  // Lorsque le lien "Exploratory Analysis" est cliqué
   document.getElementById('link-exploratory').onclick = function() {
-    console.log("Exploratory Analysis link clicked");
     Shiny.setInputValue('navigate_to', 'exploratory');
   };
-</script>
 
-  <a href="#" id="link-home">Retour à l'accueil</a>
-  
-  <script type="text/javascript">
+  // Lorsque le lien "Retour à l'accueil" est cliqué
   document.getElementById('link-home').onclick = function() {
     Shiny.setInputValue('navigate_to', 'home');
   };
-</script>
 
-
-  <script type="text/javascript">
   // Réinitialiser navigate_to après chaque clic
   Shiny.addCustomMessageHandler('resetNavigate', function(message) {
     Shiny.setInputValue('navigate_to', null);
   });
 </script>
+
+
+<span class='tooltip'>déséquilibre des classes<span class='tooltiptext'>La classe churn est sous-représentée, ce qui peut influencer les résultats des modèles.</span></span>
 
 
 
