@@ -19,7 +19,7 @@ exploratory_analysis <- function(input, output, session, selected_dataset) {
   
   
   # Fichier server.R ou partie serveur dans app.R
-  output$conclusion_text <- renderUI({
+  output$conclusion_text_bank <- renderUI({
     HTML("
     <div class='analysis-container fade-in'>
   
@@ -68,6 +68,70 @@ exploratory_analysis <- function(input, output, session, selected_dataset) {
     </div>
   ")
   })
+  
+  # Affichage conditionnel du rapport "Employee Attrition" seulement si le dataset Employee Attrition est sélectionné
+  output$conclusion_text_attrition <- renderUI({
+    if (input$dataset_choice == "whole data.csv") {  # Remplacez "whole data.csv" par le nom de votre fichier
+      HTML("
+      <div class='analysis-container fade-in'>
+      
+        <h3>Dimensions du Dataset et Qualité des Données</h3>
+        <p>Le dataset contient <strong>4410 observations</strong> et <strong>29 colonnes</strong>.</p>
+        <p><strong>111 valeurs manquantes</strong> sont présentes, ce qui nécessite une gestion des données manquantes avant toute modélisation.</p>
+        <p><strong>3 attributs constants</strong> ont été détectés, et ces colonnes peuvent être supprimées pour éviter les variables inutiles.</p>
+        
+        <h3>Proportion d'Attrition</h3>
+        <p>L'analyse de la variable cible <code>Attrition</code> montre un déséquilibre des classes :</p>
+        <ul>
+          <li><strong>Non Attrition (No)</strong> : environ 84%.</li>
+          <li><strong>Attrition (Yes)</strong> : environ 16%.</li>
+        </ul>
+        <p>Ce déséquilibre des classes peut nécessiter des approches spécifiques telles que le re-sampling ou l’utilisation de modèles adaptés aux données déséquilibrées.</p>
+        
+        <h3>Analyse des Variables Catégorielles</h3>
+        <ul>
+          <li><strong>Statut marital</strong> : Les employés célibataires semblent avoir un taux d'attrition légèrement plus élevé par rapport aux employés mariés et divorcés.</li>
+          <li><strong>Job Role</strong> : Certains rôles, tels que les <code>Research director</code> et <code>Research scientist</code>, semblent présenter une proportion d'attrition plus élevée.</li>
+          <li><strong>Business Travel</strong> : Les employés voyageant fréquemment semblent avoir un taux d'attrition plus élevé.</li>
+        </ul>
+        
+        <h3>Analyse des Variables Numériques</h3>
+        <ul>
+          <li><strong>Âge</strong> : Les employés plus jeunes (< 30 ans) semblent moins sujets à l'attrition, tandis que la distribution devient homogène pour les employés entre 30 et 60 ans.</li>
+          <li><strong>Distance from home: </strong> : la majorité des employés habitent à une distance relativement faible de leur lieu de travail (moins de 5 km). Ces employés ont une faible proportion d'attrition, ce qui peut indiquer que la proximité du lieu de travail est un facteur qui pourrait influencer positivement la rétention des employés. À mesure que la distance entre le domicile et le lieu de travail augmente (de 5 à 30 km), la proportion d'employés qui quittent l'entreprise (en rouge) semble plus homogène, même si la majorité reste des non-attrition (en bleu)</li>
+          <li><strong>Monthly Income</strong> : Une faible corrélation a été observée entre l’attrition et le revenu mensuel, mais les employés avec un salaire plus bas semblent plus enclins à quitter l’entreprise.</li>
+        </ul>
+        
+        <h3>Corrélation des Variables Numériques</h3>
+        <ul>
+          <li><strong>YearsAtCompany</strong> et <strong>YearsWithCurrManager</strong> sont positivement corrélés, ce qui indique que les employés ayant plus d'ancienneté ont également passé plus de temps avec le même manager.</li>
+          <li><strong>MonthlyIncome</strong> est fortement corrélé avec <strong>JobLevel</strong>, ce qui est attendu car les niveaux de postes plus élevés tendent à recevoir des salaires plus importants.</li>
+          <li><strong>YearsAtCompany</strong> Les nouveaux employés (moins de 5 ans) semblent plus susceptibles de quitter l'entreprise. Les employés ayant une longue ancienneté sont moins susceptibles de partir, ce qui suggère que la rétention s'améliore avec le temps passé dans l'entreprise.</li>
+          <li><strong>DistanceFromHome</strong> et <strong>Attrition</strong> ne montrent pas de corrélation directe forte.</li>
+        </ul>
+        
+        <h3>Conclusions</h3>
+        <p>Les variables telles que <strong>l'âge</strong>, <strong>le revenu mensuel</strong>, <strong>le rôle dans l'entreprise</strong>, et <strong>le statut marital</strong> sont étroitement liées à l'attrition. Cela indique des pistes d'optimisation pour les stratégies RH visant à réduire le taux d'attrition.</p>
+        
+        <div>
+  <h3>Matrice de corrélation:</h3>
+  <ul>
+    <li><strong>YearsAtCompany</strong> et <strong>YearsWithCurrManager</strong> sont fortement corrélés positivement, indiquant que les employés restant longtemps dans l'entreprise travaillent souvent avec le même manager.</li>
+    <li><strong>MonthlyIncome</strong> est fortement corrélé avec <strong>JobLevel</strong>, ce qui est attendu, car les postes plus élevés reçoivent des salaires plus importants.</li>
+    <li><strong>DistanceFromHome</strong> n'a pas de forte corrélation avec l'attrition ou d'autres variables, suggérant qu'elle n'influence pas fortement les départs.</li>
+  </ul>
+
+  <h3>Conclusion :</h3>
+  <p>Les corrélations observées indiquent que les variables liées à l'ancienneté et à la rémunération influencent plus fortement les décisions d'attrition.</p>
+</div>
+
+      
+      </div>
+      ")
+    }
+  })
+  
+  
   
   
   

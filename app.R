@@ -46,21 +46,36 @@ ui <- dashboardPage(
 # Définir le serveur
 server <- function(input, output, session) {
   
-  # Charger dynamiquement le dataset sélectionné uniquement lors du clic sur "Exploratory Analysis"
-  selected_dataset <- eventReactive(input$navigate_to, {
-    if (input$navigate_to == 'exploratory') {
-      file_path <- file.path("data", input$dataset_choice)
-      
-      # Vérifier le type de fichier et le charger correctement
-      if (grepl("\\.csv$", file_path)) {
-        header_line <- readLines(file_path, n = 1)
-        sep_guess <- if (grepl(";", header_line)) ";" else if (grepl(",", header_line)) "," else if (grepl("\\t", header_line)) "\t" else stop("Impossible de détecter le séparateur du fichier CSV")
-        read.csv(file_path, stringsAsFactors = FALSE, sep = sep_guess)
-      } else if (grepl("\\.xlsx$", file_path)) {
-        read_excel(file_path)
-      } else {
-        stop("Format de fichier non pris en charge")
-      }
+  # Observer la sélection du dataset pour afficher l'onglet correspondant
+  observe({
+    if (input$dataset_choice == "bank-additional-full.csv") {
+      shinyjs::show(selector = 'a[data-value="Rapport Bank Marketing"]')
+      shinyjs::hide(selector = 'a[data-value="Rapport Employee Attrition"]')
+    } else if (input$dataset_choice == "whole data.csv") {
+      shinyjs::show(selector = 'a[data-value="Rapport Employee Attrition"]')
+      shinyjs::hide(selector = 'a[data-value="Rapport Bank Marketing"]')
+    } else {
+      shinyjs::hide(selector = 'a[data-value="Rapport Bank Marketing"]')
+      shinyjs::hide(selector = 'a[data-value="Rapport Employee Attrition"]')
+    }
+  })
+  
+  
+  
+  
+  # Charger dynamiquement le dataset sélectionné chaque fois que 'dataset_choice' change
+  selected_dataset <- reactive({
+    file_path <- file.path("data", input$dataset_choice)
+    
+    # Vérifier le type de fichier et le charger correctement
+    if (grepl("\\.csv$", file_path)) {
+      header_line <- readLines(file_path, n = 1)
+      sep_guess <- if (grepl(";", header_line)) ";" else if (grepl(",", header_line)) "," else if (grepl("\\t", header_line)) "\t" else stop("Impossible de détecter le séparateur du fichier CSV")
+      read.csv(file_path, stringsAsFactors = FALSE, sep = sep_guess)
+    } else if (grepl("\\.xlsx$", file_path)) {
+      read_excel(file_path)
+    } else {
+      stop("Format de fichier non pris en charge")
     }
   })
   

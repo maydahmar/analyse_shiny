@@ -76,13 +76,25 @@ exploratory_ui <- function() {
                )
       ),
       
-      tabPanel("Rapport (Conclusion)",
+      # Onglet Rapport (Conclusion) pour Bank Marketing
+      tabPanel("Rapport Bank Marketing",
                fluidRow(
                  box(title = "Analyse approfondie du dataset 'Bank Marketing'", width = 12, status = "success", solidHeader = TRUE,
-                     uiOutput("conclusion_text")  # Utiliser uiOutput au lieu de verbatimTextOutput
+                     uiOutput("conclusion_text_bank")  # Conclusion spécifique pour Bank Marketing
                  )
-               )
+               ), id = "conclusion-tab-bank"
+      ),
+      
+      # Onglet Rapport (Conclusion) pour Employee Attrition
+      tabPanel("Rapport Employee Attrition",
+               fluidRow(
+                 box(title = "Analyse approfondie du dataset 'Employee Attrition'", width = 12, status = "success", solidHeader = TRUE,
+                     uiOutput("conclusion_text_attrition")  # Conclusion spécifique pour Employee Attrition
+                 )
+               ), id = "conclusion-tab-attrition"
       )
+      
+     
       
     )
   )
