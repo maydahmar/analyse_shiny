@@ -102,32 +102,32 @@ train_bank <- function(train_test_data) {
   
   
   # 3. Construire le modèle SVM sans noyau
-  svm_model <- svm(y_train ~ ., data = train_data, probability = TRUE)
+  #svm_model <- svm(y_train ~ ., data = train_data, probability = TRUE)
   
   # Prédiction sur les données de test
-  predictions_prob_svm <- predict(svm_model, newdata = test_data, probability = TRUE)
+  #predictions_prob_svm <- predict(svm_model, newdata = test_data, probability = TRUE)
  
-  predictions_prob_svm_values <- attr(predictions_prob_svm, "probabilities")[, 2]  # Probabilité pour la classe positive
+  #predictions_prob_svm_values <- attr(predictions_prob_svm, "probabilities")[, 2]  # Probabilité pour la classe positive
   
   # Calculer l'AUC pour le modèle SVM
-  roc_curve_svm <- roc(test_data$y_test, predictions_prob_svm_values)
-  auc_value_svm <- auc(roc_curve_svm)
+  #roc_curve_svm <- roc(test_data$y_test, predictions_prob_svm_values)
+  #auc_value_svm <- auc(roc_curve_svm)
   
   # Afficher l'AUC du modèle SVM sans noyau
-  print(paste("AUC du modèle SVM sans noyau :", auc_value_svm))
+  #print(paste("AUC du modèle SVM sans noyau :", auc_value_svm))
   
   #Tester les différents noyaux
-  kernels <- c("linear", "radial", "polynomial", "sigmoid")
-  results <- lapply(kernels, function(k) evaluate_svm_kernel(train_data, test_data, y_train, y_test, k))
+  #kernels <- c("linear", "radial", "polynomial", "sigmoid")
+  #results <- lapply(kernels, function(k) evaluate_svm_kernel(train_data, test_data, y_train, y_test, k))
   
   # Afficher les résultats
-  for (result in results) {
-    print(paste("Kernel:", result$kernel, "- AUC:", result$auc))
-  }
+  #for (result in results) {
+  #  print(paste("Kernel:", result$kernel, "- AUC:", result$auc))
+  #}
   
   # Trouver le noyau avec la meilleure AUC
-  best_result <- results[[which.max(sapply(results, function(x) x$auc))]]
-  print(paste("Meilleur kernel:", best_result$kernel, "- AUC:", best_result$auc))
+  #best_result <- results[[which.max(sapply(results, function(x) x$auc))]]
+  #print(paste("Meilleur kernel:", best_result$kernel, "- AUC:", best_result$auc))
   
 }
 # Fonction pour afficher l'AUC des modèles

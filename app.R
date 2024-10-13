@@ -1,17 +1,19 @@
 # Charger les fichiers R pour l'interface et les fonctions
 source("R/exploratory_analysis.R")
 source("ui/exploratory_ui.R")
+source("R/modeling.R")
+source("ui/modeling_ui.R")
 library(shiny)
 library(shinydashboard)
 library(shinyjs)
 library(readxl)  # Charger readxl pour lire les fichiers Excel
 
-# Définir l'interface utilisateur
+# Interface utilisateur
 ui <- dashboardPage(
   dashboardHeader(title = "Profil de données"),
   dashboardSidebar(
-    
     sidebarMenu(
+      id = "tabs",  # Ajout d'un ID pour le système d'onglets
       menuItem("Home", tabName = "home", icon = icon("home")),
       
       # Choix du dataset
@@ -24,44 +26,41 @@ ui <- dashboardPage(
           "Employee Attrition" = "whole data.csv"
         ),
         selected = "bank-additional-full.csv"
-      ), 
+      ),
       
       # Ajouter le menu item pour Exploratory Analysis
-      menuItem("Exploratory Analysis", icon = icon("chart-bar"), tabName = "exploratory")
+      menuItem("Exploratory Analysis", icon = icon("chart-bar"), tabName = "exploratory"),
+      
+      # Nouveau lien vers Model Analysis
+      menuItem("Model Analysis", icon = icon("cogs"), tabName = "modeling")
     )
   ),
   
+  # Corps de la page
   dashboardBody(
     useShinyjs(),  # Activer shinyjs
-    div(id = "home-content",
-        includeHTML("www/index.html")
-    ),
-    div(id = "exploratory-content",
-        exploratory_ui(),  # Appel à l'UI spécifique de l'analyse exploratoire
-        style = "display: none;"  # Cacher cette section au départ
+    tabItems(
+      tabItem(tabName = "home", 
+              div(id = "home-content", 
+                  includeHTML("www/index.html"),  # Le contenu original, y compris les images, actualités, etc.
+                  
+                  # Ajouter des boutons de navigation après le contenu existant
+                  h2("Explorez les sections suivantes"),
+                  p("Vous pouvez cliquer sur les boutons ci-dessous pour accéder directement aux sections :"),
+                  actionButton("go_to_exploratory", "Aller à l'Exploratory Analysis"),
+                  actionButton("go_to_modeling", "Aller à l'Analyse des Modèles")
+              )
+      ),
+      tabItem(tabName = "exploratory", 
+              div(id = "exploratory-content", exploratory_ui())),
+      tabItem(tabName = "modeling", 
+              div(id = "modeling-content", modeling_ui()))
     )
   )
 )
 
-# Définir le serveur
+# Serveur
 server <- function(input, output, session) {
-  
-  # Observer la sélection du dataset pour afficher l'onglet correspondant
-  observe({
-    if (input$dataset_choice == "bank-additional-full.csv") {
-      shinyjs::show(selector = 'a[data-value="Rapport Bank Marketing"]')
-      shinyjs::hide(selector = 'a[data-value="Rapport Employee Attrition"]')
-    } else if (input$dataset_choice == "whole data.csv") {
-      shinyjs::show(selector = 'a[data-value="Rapport Employee Attrition"]')
-      shinyjs::hide(selector = 'a[data-value="Rapport Bank Marketing"]')
-    } else {
-      shinyjs::hide(selector = 'a[data-value="Rapport Bank Marketing"]')
-      shinyjs::hide(selector = 'a[data-value="Rapport Employee Attrition"]')
-    }
-  })
-  
-  
-  
   
   # Charger dynamiquement le dataset sélectionné chaque fois que 'dataset_choice' change
   selected_dataset <- reactive({
@@ -82,46 +81,14 @@ server <- function(input, output, session) {
   # Appel du serveur spécifique de l'analyse exploratoire avec les données chargées
   exploratory_analysis(input, output, session, selected_dataset = selected_dataset)
   
-  # Observer les changements de 'navigate_to' pour afficher l'interface Exploratory Analysis
-  observeEvent(input$navigate_to, {
-    if (input$navigate_to == 'exploratory') {
-      shinyjs::hide("home-content")  # Cacher la section accueil
-      shinyjs::show("exploratory-content")  # Afficher la section Exploratory Analysis
-      
-      # Réinitialiser la valeur de 'navigate_to' après avoir affiché l'Exploratory Analysis
-      session$sendCustomMessage(type = 'resetNavigate', message = list())
-    }
+  # Utiliser `updateTabItems()` pour basculer d'onglet lorsque les boutons sont cliqués
+  observeEvent(input$go_to_exploratory, {
+    updateTabItems(session, "tabs", "exploratory")
   })
   
-  # Observer le clic sur l'item du menu latéral
-  observeEvent(input$sidebarItemExpanded, {
-    if (input$sidebarItemExpanded == "exploratory") {
-      shinyjs::hide("home-content")  # Cacher la section accueil
-      shinyjs::show("exploratory-content")  # Afficher la section Exploratory Analysis
-    }
+  observeEvent(input$go_to_modeling, {
+    updateTabItems(session, "tabs", "modeling")
   })
-  
-  
-  # Observer le clic sur le bouton de retour pour revenir à la page d'accueil
-  observeEvent(input$go_back, {
-    shinyjs::hide("exploratory-content")  # Cacher la section Exploratory Analysis
-    shinyjs::show("home-content")  # Afficher la section accueil
-    
-    # Réinitialiser la valeur de 'navigate_to'
-    session$sendCustomMessage(type = 'resetNavigate', message = list())
-  })
-  
-  # Observer le clic sur le raccourci Exploratory Analysis dans la barre latérale
-  observeEvent(input$sidebarItemExpanded, {
-    if (input$sidebarItemExpanded == "exploratory") {
-      shinyjs::hide("home-content")  # Cacher la section accueil
-      shinyjs::show("exploratory-content")  # Afficher la section Exploratory Analysis
-    }
-  })
-
-  
-  
-  
 }
 
 # Lancer l'application
