@@ -171,55 +171,41 @@ best_svm_kernel <- function(train_data, test_data, y_train, y_test) {
   return(best_result)
 }
 
-grid_search_logistic <- function(X_train, y_train, X_test, y_test) {
-  # Utiliser glmnet pour effectuer une régression logistique avec régularisation
-  # Recherche de grille sur les paramètres de régularisation `alpha` et `lambda`
+grid_search_logistic <- function(X_train, y_train, X_test, y_test) {   
+  # Utiliser glmnet pour effectuer une régression logistique avec régularisation   
+  # Convertir en matrices (glmnet requiert des matrices)   
+  X_train_mat <- as.matrix(X_train)   
+  X_test_mat <- as.matrix(X_test)   
   
-  # Convertir en matrices (glmnet requiert des matrices)
-  X_train_mat <- as.matrix(X_train)
-  X_test_mat <- as.matrix(X_test)
-  
-  # Définir la grille d'hyperparamètres pour alpha (0 = Ridge, 1 = Lasso) et lambda (pénalité)
-  alpha_values <- c(0, 0.5, 1)  # alpha = 0 pour Ridge, alpha = 1 pour Lasso
+  # Définir la grille d'hyperparamètres pour alpha (0 = Ridge, 1 = Lasso) et lambda (pénalité)   
+  alpha_values <- c(0,0.5, 1)  # alpha = 0 pour Ridge, alpha = 1 pour Lasso   
   lambda_values <- 10^seq(-3, 3, length = 10)  # Valeurs possibles pour lambda
   
-  # Initialiser les variables pour suivre le meilleur modèle
-  best_auc <- 0
-  best_alpha <- NA
-  best_lambda <- NA
-  best_model <- NULL
+  # Créer une dataframe pour stocker les résultats   
+  grid_results <- data.frame(alpha = numeric(), lambda = numeric(), auc = numeric())
   
-  # Boucle pour parcourir toutes les combinaisons d'alpha et lambda
+  # Boucle pour parcourir toutes les combinaisons d'alpha et lambda   
   for (alpha in alpha_values) {
     for (lambda in lambda_values) {
-      # Ajuster le modèle glmnet
+      # Ajuster le modèle glmnet       
       logistic_model <- glmnet(X_train_mat, y_train, family = "binomial", alpha = alpha, lambda = lambda)
       
-      # Prédire les probabilités pour les données de test
+      # Prédire les probabilités pour les données de test       
       predictions_prob_logistic <- predict(logistic_model, newx = X_test_mat, type = "response", s = lambda)
       
-      # Calculer l'AUC pour la régression logistique
+      # Calculer l'AUC pour la régression logistique       
       roc_curve_logistic <- roc(y_test, predictions_prob_logistic)
       auc_value_logistic <- auc(roc_curve_logistic)
       
-      # Si ce modèle est meilleur, on l'enregistre
-      if (auc_value_logistic > best_auc) {
-        best_auc <- auc_value_logistic
-        best_alpha <- alpha
-        best_lambda <- lambda
-        best_model <- logistic_model
-      }
+      # Enregistrer les résultats dans le dataframe       
+      grid_results <- rbind(grid_results, data.frame(alpha = alpha, lambda = lambda, auc = auc_value_logistic))
     }
   }
   
-  # Retourner le meilleur modèle et les paramètres
-  return(list(
-    model = best_model,     # Le meilleur modèle ajusté
-    auc = best_auc,         # La meilleure AUC obtenue
-    alpha = best_alpha,     # Meilleur hyperparamètre alpha
-    lambda = best_lambda    # Meilleur hyperparamètre lambda
-  ))
+  # Retourner le dataframe contenant toutes les combinaisons d'alpha, lambda et AUC
+  return(grid_results)
 }
+
 
 
 

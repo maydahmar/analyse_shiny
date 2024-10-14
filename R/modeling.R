@@ -400,17 +400,21 @@ modeling_server <- function(input, output, session, selected_dataset, dataset_ch
                 plot.title = element_text(hjust = 0.5, size = 14))
       })
       output$grid_results <- renderPlot({
-        results <- train_grid_svm_linear(train_data, test_data, y_train, y_test)
+        # Exécution du grid search pour la régression logistique
+        grid_results <- grid_search_logistic(X_train, y_train, X_test, y_test)
         
-        ggplot(results, aes(x = factor(cost), y = auc, fill = auc)) +
+        # Visualisation des résultats avec ggplot
+        ggplot(grid_results, aes(x = factor(lambda), y = auc, fill = auc)) +
           geom_bar(stat = "identity", position = "dodge") +
-          scale_fill_gradient(low = "lightgreen", high = "green") +
+          scale_fill_gradient(low = "lightblue", high = "blue") +
           geom_text(aes(label = round(auc, 2)), vjust = -0.5, color = "black", size = 4) +
-          labs(title = "Grid Search Results for SVM (AUC)",
-               x = "Cost", y = "AUC") +
+          labs(title = "Grid Search Results for Logistic Regression (AUC)",
+               x = "Lambda (log scale)", y = "AUC") +
           theme_minimal() +
-          theme(axis.text.x = element_text(angle = 45, hjust = 1))
+          theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+          facet_wrap(~ alpha, nrow = 1)  # Affichage des résultats par valeur d'alpha
       })
+      
       
       
       
