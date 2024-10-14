@@ -77,6 +77,7 @@ server <- function(input, output, session) {
       stop("Format de fichier non pris en charge")
     }
   })
+
   
   # Appel du serveur spécifique de l'analyse exploratoire avec les données chargées
   exploratory_analysis(input, output, session, selected_dataset = selected_dataset)
