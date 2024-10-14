@@ -81,6 +81,9 @@ server <- function(input, output, session) {
   
   # Appel du serveur spécifique de l'analyse exploratoire avec les données chargées
   exploratory_analysis(input, output, session, selected_dataset = selected_dataset)
+  # Appel du serveur modeling avec le dataset sélectionné et le choix du dataset
+  modeling_server(input, output, session, selected_dataset = selected_dataset, dataset_choice = reactive(input$dataset_choice))
+  
   
   # Utiliser `updateTabItems()` pour basculer d'onglet lorsque les boutons sont cliqués
   observeEvent(input$go_to_exploratory, {

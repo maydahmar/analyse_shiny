@@ -44,9 +44,19 @@ prepare_data_bank <- function() {
   X_test <- test_data[ , -which(names(test_data) == "y")]  # Toutes les colonnes sauf y
   y_test <- test_data$y  # La variable cible
   
-  # Standardisation des données
-  X_train <- scale(X_train)  # Standardiser les données d'entraînement
-  X_test <- scale(X_test, center = attr(X_train, "scaled:center"), scale = attr(X_train, "scaled:scale"))  # Utiliser les mêmes paramètres pour le test
+  # Identifier les colonnes numériques et catégorielles
+  numeric_columns <- sapply(X_train, is.numeric)
+  categorical_columns <- !numeric_columns  # Complément des colonnes numériques
+  
+  # Appliquer le scaling uniquement sur les colonnes numériques
+  X_train_numeric <- scale(X_train[ , numeric_columns])  # Normaliser uniquement les colonnes numériques
+  X_test_numeric <- scale(X_test[ , numeric_columns], 
+                          center = attr(X_train_numeric, "scaled:center"), 
+                          scale = attr(X_train_numeric, "scaled:scale"))  # Utiliser les mêmes paramètres pour le test
+  
+  # Réassembler les données avec les variables catégorielles non normalisées
+  X_train <- cbind(X_train_numeric, X_train[ , categorical_columns])  # Réunir colonnes numériques normalisées + catégorielles
+  X_test <- cbind(X_test_numeric, X_test[ , categorical_columns])     # Faire de même pour les données de test
   
   
   # Retourner une liste contenant les deux datasets
@@ -115,8 +125,8 @@ train_decision_tree <- function(train_data, test_data, y_train, y_test){
   auc_value_dt <- auc(roc_curve_dt)
   
   predictions <- ifelse(predictions_prob_dt > 0.5, 1, 0)
-  accuracy <- sum(predictions == y_train) / length(y_train)
-  confusion_matrix <- table(Predicted = predictions, Actual = y_train)
+  accuracy <- sum(predictions == y_test) / length(y_test)
+  confusion_matrix <- table(Predicted = predictions, Actual = y_test)
   
   
   return (list(roc_curve = roc_curve_dt,
@@ -147,12 +157,12 @@ train_glm <-function(train_data, test_data, y_train, y_test){
   auc_value_logistic <- auc(roc_curve_logistic)
   
   predictions <- ifelse(predictions_prob_logistic > 0.5, 1, 0)
-  accuracy <- sum(predictions == y_train) / length(y_train)
-  confusion_matrix <- table(Predicted = predictions, Actual = y_train)
+  accuracy <- sum(predictions == y_test) / length(y_test)
+  confusion_matrix <- table(Predicted = predictions, Actual = y_test)
   
   
-  return (list(roc_curve = roc_curve_dt,
-               auc = auc_value_dt,
+  return (list(roc_curve = roc_curve_logistic,
+               auc = auc_value_logistic,
                accuracy = accuracy,
                confusion_matrix = confusion_matrix
   ))
@@ -181,12 +191,12 @@ train_svm_linear <- function(train_data, test_data, y_train, y_test){
   roc_curve_svm <- roc(test_data$y_test, predictions_prob_svm_values)
   auc_value_svm <- auc(roc_curve_svm)
   
-  predictions <- ifelse(predictions_prob_logistic > 0.5, 1, 0)
-  accuracy <- sum(predictions == y_train) / length(y_train)
-  confusion_matrix <- table(Predicted = predictions, Actual = y_train)
+  predictions <- ifelse(predictions_prob_svm_values > 0.5, 1, 0)
+  accuracy <- sum(predictions == y_test) / length(y_test)
+  confusion_matrix <- table(Predicted = predictions, Actual = y_test)
   
-  return (list(roc_curve = roc_curve_dt,
-               auc = auc_value_dt,
+  return (list(roc_curve = roc_curve_svm,
+               auc = auc_value_svm,
                accuracy = accuracy,
                confusion_matrix = confusion_matrix
   ))
@@ -229,16 +239,10 @@ plot_auc <- function(model_results) {
 summary_table <- function(model_results) {
 }
 
-#train_test = prepare_data_bank()
-#train_bank_grid(train_test)
-train_test <- prepare_data_attrition()
-train_bank_grid(train_test)
-
-
 # R/modeling_server.R
 
 # Fonction serveur pour la section Modeling
-modeling_server <- function(input, output, session, selected_dataset) {
+modeling_server <- function(input, output, session, selected_dataset, dataset_choice) {
   
   # Réagir lorsque le bouton "Train Model" est cliqué
   observeEvent(input$train_model, {
@@ -246,15 +250,15 @@ modeling_server <- function(input, output, session, selected_dataset) {
     dataset <- selected_dataset()
     
     # Vérifier quel dataset est sélectionné
-    if (input$model_choice == "bank-additional-full.csv") {
+    if ("y" %in% names(dataset)) {
       # Préparer les données pour le dataset Bank Marketing
       train_test_data <- prepare_data_bank()
       
-    } else if (input$model_choice == "whole data.csv") {
+    } else if ("Attrition" %in% names(dataset)) {
       # Préparer les données pour le dataset Employee Attrition
       train_test_data <- prepare_data_attrition()
       
-    } else if (input$model_choice == "creditcard.csv") {
+    } else if ("Class" %in% names(dataset)) {
       # Si tu as une fonction pour le dataset Credit Fraud
       #train_test_data <- prepare_data_credit_fraud()  # À adapter selon ton besoin
       
@@ -273,7 +277,7 @@ modeling_server <- function(input, output, session, selected_dataset) {
     train_data <- cbind(y_train, X_train)
     test_data <- cbind(y_test, X_test)
     
-    
+    print(input$model_choice)
     # Réagir selon le choix du modèle
     if (input$model_choice == "Decision Tree") {
       # Paramètres spécifiques à l'arbre de décision
@@ -289,7 +293,9 @@ modeling_server <- function(input, output, session, selected_dataset) {
       
       # Mise à jour des sorties
       output$model_accuracy <- renderText({ paste("Accuracy:", round(accuracy, 3)) })
+      output$model_auc <- renderText({ paste("AUC:", round(auc, 3)) })
       output$confusion_matrix <- renderTable({ confusion_matrix })
+      output$roc_curve <- renderPlot({ plot.roc(roc_curve, col = "blue")})
       
       # Optionnel : Importance des variables
       output$feature_importance <- renderPlot({
@@ -307,7 +313,9 @@ modeling_server <- function(input, output, session, selected_dataset) {
       
       # Mise à jour des sorties
       output$model_accuracy <- renderText({ paste("Accuracy:", round(accuracy, 3)) })
+      output$model_auc <- renderText({ paste("AUC:", round(auc, 3)) })
       output$confusion_matrix <- renderTable({ confusion_matrix })
+      output$roc_curve <- renderPlot({ plot.roc(roc_curve, col = "blue")})
       
     } else if (input$model_choice == "Logistic Regression") {
       # Paramètres spécifiques à la régression logistique
@@ -320,8 +328,9 @@ modeling_server <- function(input, output, session, selected_dataset) {
       
       # Mise à jour des sorties
       output$model_accuracy <- renderText({ paste("Accuracy:", round(accuracy, 3)) })
+      output$model_auc <- renderText({ paste("AUC:", round(auc, 3)) })
       output$confusion_matrix <- renderTable({ confusion_matrix })
-      
+      output$roc_curve <- renderPlot({ plot.roc(roc_curve, col = "blue")})
     }
     
   })

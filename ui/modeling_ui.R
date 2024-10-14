@@ -12,8 +12,8 @@ modeling_ui <- function() {
         h3("Model Selection"),
         
         # Choix du modèle à entraîner
-        selectInput("model_choice", "Choose a Model", 
-                    choices = c("Decision Tree", "Logistic Regression", "SVM"), 
+        selectInput("model_choice", "Choose a Model",
+                    choices = c("Decision Tree", "Logistic Regression", "SVM Linear"),
                     selected = "Decision Tree"),
         
         conditionalPanel(
@@ -23,10 +23,7 @@ modeling_ui <- function() {
         ),
         
         conditionalPanel(
-          condition = "input.model_choice == 'SVM'",
-          selectInput("svm_kernel", "Kernel Type", 
-                      choices = c("Linear", "Radial", "Polynomial", "Sigmoid"), 
-                      selected = "Radial"),
+          condition = "input.model_choice == 'SVM Linear'",
           numericInput("svm_cost", "Cost", value = 1, min = 0.01, max = 10, step = 0.1),
           numericInput("svm_gamma", "Gamma (for Radial)", value = 0.1, min = 0.01, max = 1, step = 0.01)
         ),
@@ -40,6 +37,8 @@ modeling_ui <- function() {
                    fluidRow(
                      box(title = "Model Accuracy", width = 12, status = "primary", solidHeader = TRUE,
                          verbatimTextOutput("model_accuracy")),
+                     box(title = "Model AUC", width = 12, status = "info", solidHeader = TRUE,
+                         verbatimTextOutput("model_auc")),
                      box(title = "Confusion Matrix", width = 12, status = "info", solidHeader = TRUE,
                          tableOutput("confusion_matrix"))
                    ),
@@ -48,12 +47,6 @@ modeling_ui <- function() {
                          plotOutput("roc_curve")),
                      box(title = "Feature Importance", width = 12, status = "success", solidHeader = TRUE,
                          plotOutput("feature_importance"))
-                   )
-          ),
-          tabPanel("Hyperparameter Tuning",
-                   fluidRow(
-                     box(title = "Optimal Hyperparameters", width = 12, status = "info", solidHeader = TRUE,
-                         verbatimTextOutput("best_hyperparameters"))
                    )
           )
         )
