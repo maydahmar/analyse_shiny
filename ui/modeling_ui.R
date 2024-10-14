@@ -13,20 +13,8 @@ modeling_ui <- function() {
         
         # Choix du modèle à entraîner
         selectInput("model_choice", "Choose a Model",
-                    choices = c("Decision Tree", "Logistic Regression", "SVM Linear"),
+                    choices = c("Decision Tree", "Logistic Regression", "SVM Linear", "SVM Non Linear"),
                     selected = "Decision Tree"),
-        
-        conditionalPanel(
-          condition = "input.model_choice == 'Decision Tree'",
-          sliderInput("tree_depth", "Max Depth of Tree", min = 1, max = 20, value = 5),
-          sliderInput("min_samples_split", "Min Samples Split", min = 2, max = 10, value = 2)
-        ),
-        
-        conditionalPanel(
-          condition = "input.model_choice == 'SVM Linear'",
-          numericInput("svm_cost", "Cost", value = 1, min = 0.01, max = 10, step = 0.1),
-          numericInput("svm_gamma", "Gamma (for Radial)", value = 0.1, min = 0.01, max = 1, step = 0.01)
-        ),
         
         actionButton("train_model", "Train Model", icon = icon("play"))
       ),
@@ -40,13 +28,20 @@ modeling_ui <- function() {
                      box(title = "Model AUC", width = 12, status = "info", solidHeader = TRUE,
                          verbatimTextOutput("model_auc")),
                      box(title = "Confusion Matrix", width = 12, status = "info", solidHeader = TRUE,
-                         tableOutput("confusion_matrix"))
+                         plotOutput("confusion_matrix"))
                    ),
                    fluidRow(
                      box(title = "ROC Curve", width = 12, status = "warning", solidHeader = TRUE,
                          plotOutput("roc_curve")),
                      box(title = "Feature Importance", width = 12, status = "success", solidHeader = TRUE,
                          plotOutput("feature_importance"))
+                   )
+          ),
+          # Nouvel onglet pour les résultats du grid search
+          tabPanel("Grid Search Results",
+                   fluidRow(
+                     box(title = "Grid Search", width = 12, status = "primary", solidHeader = TRUE,
+                         plotOutput("grid_results"))
                    )
           )
         )

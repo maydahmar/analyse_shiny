@@ -6,6 +6,9 @@ library(rpart)  # Pour les arbres de décision
 library(pROC)   # Pour calculer l'AUC
 library(tidyverse)
 library(glmnet)
+# Load the required libraries
+library(ggplot2)
+library(reshape2)
 
 
 # Charger les fonctions depuis le fichier functions.R
@@ -137,15 +140,41 @@ train_decision_tree <- function(train_data, test_data, y_train, y_test){
               ))
 }
 
-train_grid_tree <- function(train_data, test_data, y_train, y_test){
-  # 2. Grid search pour l'arbre de décision
-  best_tree <- grid_search_tree(train_data, test_data, y_train, y_test)
+train_grid_tree <- function(train_data, test_data, y_train, y_test) {
+  # Définir les grilles d'hyperparamètres
+  minsplit_values <- seq(2, 10, by = 2)
+  maxdepth_values <- seq(1, 10, by = 2)
   
-  # Afficher les meilleurs hyperparamètres et l'AUC
-  print(paste("Meilleur minsplit :", best_tree$best_minsplit))
-  print(paste("Meilleur maxdepth :", best_tree$best_maxdepth))
-  print(paste("Meilleure AUC :", best_tree$best_auc))
+  # Créer un data.frame pour stocker les résultats
+  results <- data.frame(minsplit = integer(),
+                        maxdepth = integer(),
+                        auc = numeric(),
+                        accuracy = numeric())
+  
+  for (minsplit in minsplit_values) {
+    for (maxdepth in maxdepth_values) {
+      # Entraîner l'arbre de décision avec les hyperparamètres actuels
+      tree_model <- rpart(y_train ~ ., data = train_data, 
+                          method = "class", 
+                          control = rpart.control(minsplit = minsplit, maxdepth = maxdepth))
+      
+      # Prédiction sur les données de test
+      predictions_prob <- predict(tree_model, newdata = test_data, type = "prob")[, 2]
+      predictions <- ifelse(predictions_prob > 0.5, 1, 0)
+      
+      # Calcul des performances
+      roc_curve <- roc(y_test, predictions_prob)
+      auc_value <- auc(roc_curve)
+      accuracy <- sum(predictions == y_test) / length(y_test)
+      
+      # Stocker les résultats dans le data.frame
+      results <- rbind(results, data.frame(minsplit = minsplit, maxdepth = maxdepth, 
+                                           auc = auc_value, accuracy = accuracy))
+    }
+  }
+  return(results)
 }
+
 
 train_glm <-function(train_data, test_data, y_train, y_test){
   # 3. Construire le modèle de régression logistique avec les paramètres par défaut
@@ -178,9 +207,9 @@ train_grid_glm <-function(train_data, test_data, y_train, y_test){
   print(paste("Meilleure AUC :", best_logistic$auc))
 }
 
-train_svm_linear <- function(train_data, test_data, y_train, y_test){
+train_svm <- function(train_data, test_data, y_train, y_test, kernel){
   # 5. Construire le modèle SVM sans noyau
-  svm_model <- svm(y_train ~ ., data = train_data, probability = TRUE)
+  svm_model <- svm(y_train ~ ., data = train_data, probability = TRUE, kernel = kernel)
   
   # Prédiction sur les données de test
   predictions_prob_svm <- predict(svm_model, newdata = test_data, probability = TRUE)
@@ -203,43 +232,49 @@ train_svm_linear <- function(train_data, test_data, y_train, y_test){
   
 }
 
-train_grid_svm_linear <-  function(train_data, test_data, y_train, y_test){
-  # 6. Grid search SVM sans noyau 
-  best_svm <- grid_search_svm(train_data, test_data, y_train, y_test,'linear')
+train_grid_svm_linear <- function(train_data, test_data, y_train, y_test) {
+  # Grille de paramètres
+  cost_values <- seq(0.1, 1, by = 0.2)
   
-  # Afficher les meilleurs hyperparamètres et l'AUC
-  print(paste("Meilleur C :", best_svm$C))
-  print(paste("Meilleur gamma :", best_svm$gamma))
-  print(paste("Meilleure AUC :", best_svm$auc))
-}
-
-train_svm_non_linear <- function(train_data, test_data, y_train, y_test){
-  # 7. Recherche du meilleur noyau (polynomial)
-  #Tester les différents noyaux
-  kernels <- c("linear", "radial", "polynomial", "sigmoid")
-  results <- lapply(kernels, function(k) evaluate_svm_kernel(train_data, test_data, y_train, y_test, k))
+  # DataFrame pour stocker les résultats
+  results <- data.frame(cost = numeric(),
+                        auc = numeric(),
+                        accuracy = numeric())
   
-  # Afficher les résultats
-  for (result in results) {
-    print(paste("Kernel:", result$kernel, "- AUC:", result$auc))
+  for (cost in cost_values) {
+    # Entraîner le modèle SVM avec les hyperparamètres actuels
+    svm_model <- svm(y_train ~ ., data = train_data, 
+                      kernel = "linear", cost = cost, probability = TRUE)
+      
+    # Prédictions
+    predictions_prob <- predict(svm_model, newdata = test_data, probability = TRUE)
+    predictions_prob_values <- attr(predictions_prob, "probabilities")[, 2]
+    predictions <- ifelse(predictions_prob_values > 0.5, 1, 0)
+      
+    # Calcul des performances
+    roc_curve <- roc(y_test, predictions_prob_values)
+    auc_value <- auc(roc_curve)
+    accuracy <- sum(predictions == y_test) / length(y_test)
+      
+    # Stocker les résultats
+    results <- rbind(results, data.frame(cost = cost, auc = auc_value, accuracy = accuracy))
   }
-  
-  # Trouver le noyau avec la meilleure AUC
-  best_result <- results[[which.max(sapply(results, function(x) x$auc))]]
-  print(paste("Meilleur kernel:", best_result$kernel, "- AUC:", best_result$auc))
-  
+  return(results)
 }
 
-# Fonction pour afficher l'AUC des modèles
-plot_auc <- function(model_results) {
+
+train_svm_non_linear <- function(train_data, test_data, y_train, y_test) {
+  # Liste des noyaux à tester
+  kernels <- c("radial", "polynomial", "sigmoid")
   
+  # Appliquer la fonction à chaque noyau et obtenir un dataframe
+  results <- do.call(rbind, lapply(kernels, function(k) evaluate_svm_kernel(train_data, test_data, y_train, y_test, k)))
+  
+  return(results)  # Retourner les résultats sous forme de dataframe
 }
 
-# Fonction pour créer un tableau récapitulatif des résultats des modèles
-summary_table <- function(model_results) {
-}
 
-# R/modeling_server.R
+
 
 # Fonction serveur pour la section Modeling
 modeling_server <- function(input, output, session, selected_dataset, dataset_choice) {
@@ -294,17 +329,51 @@ modeling_server <- function(input, output, session, selected_dataset, dataset_ch
       # Mise à jour des sorties
       output$model_accuracy <- renderText({ paste("Accuracy:", round(accuracy, 3)) })
       output$model_auc <- renderText({ paste("AUC:", round(auc, 3)) })
-      output$confusion_matrix <- renderTable({ confusion_matrix })
       output$roc_curve <- renderPlot({ plot.roc(roc_curve, col = "blue")})
+      output$confusion_matrix <- renderPlot({
+        # Convert the confusion matrix to a data frame for ggplot
+        cm_df <- as.data.frame(confusion_matrix)
+          
+        # Create a heatmap with ggplot2
+        ggplot(cm_df, aes(x = Predicted, y = Actual, fill = Freq)) +
+        geom_tile(color = "white") +
+        scale_fill_gradient(low = "lightblue", high = "blue") +
+        geom_text(aes(label = Freq), color = "white", size = 6) +
+        labs(title = "Confusion Matrix", x = "Predicted", y = "Actual") +
+        theme_minimal() +
+        theme(axis.text.x = element_text(angle = 45, hjust = 1), 
+        axis.text = element_text(size = 12), 
+        plot.title = element_text(hjust = 0.5, size = 14))
+      })
       
       # Optionnel : Importance des variables
       output$feature_importance <- renderPlot({
-        varImpPlot(tree_model)
+        importance <- tree$variable.importance  # Access variable importance from the decision tree model
+        if (!is.null(importance)) {
+          barplot(importance, main = "Feature Importance", col = "lightblue", las = 2)
+        } else {
+          plot.new()  # Create an empty plot if importance is NULL
+          text(0.5, 0.5, "No feature importance available", cex = 1.5)
+        }
       })
+      
+      # Fonction serveur pour afficher les résultats du Grid Search
+      output$grid_results <- renderPlot({
+        results <- train_grid_tree(train_data, test_data, y_train, y_test)
+        
+        ggplot(results, aes(x = minsplit, y = maxdepth, fill = auc)) +
+          geom_tile() +
+          scale_fill_gradient(low = "lightblue", high = "blue") +
+          geom_text(aes(label = round(auc, 2)), color = "white") +
+          labs(title = "Grid Search Results for Decision Tree (AUC)",
+               x = "Min Samples Split", y = "Max Depth") +
+          theme_minimal()
+      })
+      
       
     } else if (input$model_choice == "SVM Linear") {
       # Paramètres spécifiques au SVM
-      model <- train_svm_linear(train_data, test_data, y_train, y_test)
+      model <- train_svm(train_data, test_data, y_train, y_test, 'linear')
       
       roc_curve = model$roc_curve
       auc = model$auc
@@ -314,8 +383,36 @@ modeling_server <- function(input, output, session, selected_dataset, dataset_ch
       # Mise à jour des sorties
       output$model_accuracy <- renderText({ paste("Accuracy:", round(accuracy, 3)) })
       output$model_auc <- renderText({ paste("AUC:", round(auc, 3)) })
-      output$confusion_matrix <- renderTable({ confusion_matrix })
       output$roc_curve <- renderPlot({ plot.roc(roc_curve, col = "blue")})
+      output$confusion_matrix <- renderPlot({
+        # Convert the confusion matrix to a data frame for ggplot
+        cm_df <- as.data.frame(confusion_matrix)
+        
+        # Create a heatmap with ggplot2
+        ggplot(cm_df, aes(x = Predicted, y = Actual, fill = Freq)) +
+          geom_tile(color = "white") +
+          scale_fill_gradient(low = "lightblue", high = "blue") +
+          geom_text(aes(label = Freq), color = "white", size = 6) +
+          labs(title = "Confusion Matrix", x = "Predicted", y = "Actual") +
+          theme_minimal() +
+          theme(axis.text.x = element_text(angle = 45, hjust = 1), 
+                axis.text = element_text(size = 12), 
+                plot.title = element_text(hjust = 0.5, size = 14))
+      })
+      output$grid_results <- renderPlot({
+        results <- train_grid_svm_linear(train_data, test_data, y_train, y_test)
+        
+        ggplot(results, aes(x = factor(cost), y = auc, fill = auc)) +
+          geom_bar(stat = "identity", position = "dodge") +
+          scale_fill_gradient(low = "lightgreen", high = "green") +
+          geom_text(aes(label = round(auc, 2)), vjust = -0.5, color = "black", size = 4) +
+          labs(title = "Grid Search Results for SVM (AUC)",
+               x = "Cost", y = "AUC") +
+          theme_minimal() +
+          theme(axis.text.x = element_text(angle = 45, hjust = 1))
+      })
+      
+      
       
     } else if (input$model_choice == "Logistic Regression") {
       # Paramètres spécifiques à la régression logistique
@@ -329,8 +426,68 @@ modeling_server <- function(input, output, session, selected_dataset, dataset_ch
       # Mise à jour des sorties
       output$model_accuracy <- renderText({ paste("Accuracy:", round(accuracy, 3)) })
       output$model_auc <- renderText({ paste("AUC:", round(auc, 3)) })
-      output$confusion_matrix <- renderTable({ confusion_matrix })
       output$roc_curve <- renderPlot({ plot.roc(roc_curve, col = "blue")})
+      output$confusion_matrix <- renderPlot({
+        # Convert the confusion matrix to a data frame for ggplot
+        cm_df <- as.data.frame(confusion_matrix)
+        
+        # Create a heatmap with ggplot2
+        ggplot(cm_df, aes(x = Predicted, y = Actual, fill = Freq)) +
+          geom_tile(color = "white") +
+          scale_fill_gradient(low = "lightblue", high = "blue") +
+          geom_text(aes(label = Freq), color = "white", size = 6) +
+          labs(title = "Confusion Matrix", x = "Predicted", y = "Actual") +
+          theme_minimal() +
+          theme(axis.text.x = element_text(angle = 45, hjust = 1), 
+                axis.text = element_text(size = 12), 
+                plot.title = element_text(hjust = 0.5, size = 14))
+      })
+    }else if (input$model_choice == "SVM Non Linear") {
+      
+      # Paramètres spécifiques au SVM
+      model <- train_svm(train_data, test_data, y_train, y_test, 'polynomial')
+      
+      roc_curve = model$roc_curve
+      auc = model$auc
+      accuracy = model$accuracy
+      confusion_matrix = model$confusion_matrix
+      
+      # Mise à jour des sorties
+      output$model_accuracy <- renderText({ paste("Accuracy:", round(accuracy, 3)) })
+      output$model_auc <- renderText({ paste("AUC:", round(auc, 3)) })
+      output$roc_curve <- renderPlot({ plot.roc(roc_curve, col = "blue")})
+      output$confusion_matrix <- renderPlot({
+        # Convert the confusion matrix to a data frame for ggplot
+        cm_df <- as.data.frame(confusion_matrix)
+        
+        # Create a heatmap with ggplot2
+        ggplot(cm_df, aes(x = Predicted, y = Actual, fill = Freq)) +
+          geom_tile(color = "white") +
+          scale_fill_gradient(low = "lightblue", high = "blue") +
+          geom_text(aes(label = Freq), color = "white", size = 6) +
+          labs(title = "Confusion Matrix", x = "Predicted", y = "Actual") +
+          theme_minimal() +
+          theme(axis.text.x = element_text(angle = 45, hjust = 1), 
+                axis.text = element_text(size = 12), 
+                plot.title = element_text(hjust = 0.5, size = 14))
+      })
+      
+      # Appel de la fonction pour comparer les noyaux SVM
+      kernel_results <- train_svm_non_linear(train_data, test_data, y_train, y_test)
+      
+      # Mise à jour des sorties pour les performances des noyaux
+      output$grid_results <- renderPlot({
+        ggplot(kernel_results, aes(x = kernel, y = auc, fill = auc)) +
+          geom_bar(stat = "identity", position = "dodge") +
+          scale_fill_gradient(low = "lightblue", high = "blue") +
+          geom_text(aes(label = round(auc, 2)), vjust = -0.5, color = "black", size = 4) +
+          labs(title = "Comparison of SVM Kernels (AUC)",
+               x = "Kernel", y = "AUC") +
+          theme_minimal() +
+          theme(axis.text.x = element_text(angle = 45, hjust = 1))
+      })
+      
+      
     }
     
   })

@@ -95,67 +95,15 @@ evaluate_svm_kernel <- function(train_data, test_data, y_train, y_test, kernel_t
   predictions_prob_svm_values <- attr(predictions_prob_svm, "probabilities")[, 2]
   
   # Calculer l'AUC pour le modèle SVM
-  roc_curve_svm <- roc(test_data$y_test, predictions_prob_svm_values)
+  roc_curve_svm <- roc(y_test, predictions_prob_svm_values)  # Attention à utiliser y_test correctement
   auc_value_svm <- auc(roc_curve_svm)
   
-  # Retourner l'AUC et le noyau testé
-  return(list(kernel = kernel_type, auc = auc_value_svm))
+  # Retourner un dataframe avec le noyau testé et son AUC
+  return(data.frame(kernel = kernel_type, auc = auc_value_svm))
 }
 
 
-# Définir une fonction pour calculer l'AUC
-compute_auc <- function(model, test_features, test_labels, model_type) {
-  if (model_type == "tree") {
-    # Prédictions pour l'arbre de décision
-    predictions <- predict(model, newdata = test_features, type = "prob")[, 2]
-  } else if (model_type == "logistic") {
-    # Prédictions pour la régression logistique
-    predictions <- predict(model, newdata = test_features, type = "response")
-  } else if (model_type == "svm_linear" || model_type == "svm_rbf") {
-    # Prédictions pour SVM (probabilités)
-    predictions <- attr(predict(model, newdata = test_features, probability = TRUE), "probabilities")[, 2]
-  }
-  
-  roc_curve <- roc(test_labels, predictions)
-  auc_value <- auc(roc_curve)
-  
-  return(auc_value)
-}
 
-# Grid search pour l'arbre de décision
-grid_search_tree <- function(train_data, test_data, y_train, y_test) {
-  
-  # Liste des hyperparamètres à tester
-  grid <- expand.grid(minsplit = c(2, 5, 10), 
-                      maxdepth = c(3, 5, 10))
-  
-  # Fonction pour ajuster l'arbre de décision avec des hyperparamètres spécifiques
-  fit_tree <- function(minsplit, maxdepth) {
-    rpart(y_train ~ ., 
-          data = train_data, 
-          control = rpart.control(minsplit = minsplit, maxdepth = maxdepth))
-  }
-  
-  # Appliquer l'ajustement du modèle pour chaque combinaison
-  grid <- grid %>%
-    mutate(fit = pmap(list(minsplit = minsplit, maxdepth = maxdepth), fit_tree),
-           auc = map_dbl(fit, compute_auc, 
-                         test_features = test_data %>% select(-y_test), 
-                         test_labels = y_test, model_type = "tree"))
-  
-  # Retourner la grille triée par la meilleure AUC
-  best_tree_model <- grid %>%
-    arrange(desc(auc)) %>%
-    slice(1) # Prendre la première ligne (meilleure AUC)
-  
-  # Renvoyer les meilleurs hyperparamètres et le modèle ajusté
-  return(list(
-    best_model = best_tree_model$fit[[1]],   # Le meilleur modèle
-    best_auc = best_tree_model$auc,          # Meilleure AUC
-    best_minsplit = best_tree_model$minsplit, # Meilleur minsplit
-    best_maxdepth = best_tree_model$maxdepth  # Meilleur maxdepth
-  ))
-}
 
 
 grid_search_svm <- function(train_data, test_data, y_train, y_test, kernel_type) {
